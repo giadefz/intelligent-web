@@ -4,12 +4,13 @@ import org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat;
 import org.semanticweb.owlapi.io.StreamDocumentTarget;
 import org.semanticweb.owlapi.io.StringDocumentSource;
 import org.semanticweb.owlapi.model.*;
-import org.semanticweb.owlapi.util.SimpleIRIMapper;
+import org.semanticweb.owlapi.util.NNF;
 
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.util.stream.Stream;
 
 public class LoadAndSaveOntologyTest {
 
@@ -27,6 +28,16 @@ public class LoadAndSaveOntologyTest {
         FileOutputStream fileOutputStream = new FileOutputStream(file);
         manager.saveOntology(ontology, manSyntaxFormat,
                 new StreamDocumentTarget(fileOutputStream));
+    }
+
+    @Test
+    void traverseOntology() throws OWLOntologyCreationException {
+        OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+        OWLOntology ontology = load(manager);
+        OWLDataFactory dataFactory = ontology.getOWLOntologyManager().getOWLDataFactory();
+        Stream<OWLAxiom> axiomsInNNF = ontology.logicalAxioms().map(l -> l.accept(new NNF(dataFactory)));
+        boolean equals = ontology.logicalAxioms().equals(axiomsInNNF);
+        assert !equals;
     }
 
     private OWLOntology load(@Nonnull OWLOntologyManager manager) throws OWLOntologyCreationException {
