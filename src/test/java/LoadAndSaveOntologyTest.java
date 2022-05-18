@@ -1,6 +1,7 @@
 import org.junit.jupiter.api.Test;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat;
+import org.semanticweb.owlapi.io.FileDocumentSource;
 import org.semanticweb.owlapi.io.StreamDocumentTarget;
 import org.semanticweb.owlapi.io.StringDocumentSource;
 import org.semanticweb.owlapi.model.*;
@@ -10,6 +11,7 @@ import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public class LoadAndSaveOntologyTest {
@@ -31,6 +33,20 @@ public class LoadAndSaveOntologyTest {
     }
 
     @Test
+    void loadSimpleOntologyFromFile() throws OWLOntologyCreationException, FileNotFoundException {
+        OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+        OWLOntology ontology = loadFromFile(manager, "simpleontology.txt");
+        ontology.logicalAxioms().forEach(System.out::println);
+        System.out.println("ASSIOMI IN NNF");
+        OWLDataFactory dataFactory = ontology.getOWLOntologyManager().getOWLDataFactory();
+        OWLClass temp = dataFactory.getOWLClass("temp");
+        OWLDeclarationAxiom da = dataFactory.getOWLDeclarationAxiom(temp);
+        ontology.add(da);
+        Stream<OWLAxiom> axiomsInNNF = ontology.logicalAxioms().map(l -> l.accept(new NNFMod(dataFactory, temp)));
+        axiomsInNNF.forEach(System.out::println);
+    }
+
+    @Test
     void traverseOntology() throws OWLOntologyCreationException {
         OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
         OWLOntology ontology = load(manager);
@@ -43,6 +59,11 @@ public class LoadAndSaveOntologyTest {
     private OWLOntology load(@Nonnull OWLOntologyManager manager) throws OWLOntologyCreationException {
         // in this test, the ontology is loaded from a string
         return manager.loadOntologyFromOntologyDocument(new StringDocumentSource(koala));
+    }
+
+    private OWLOntology loadFromFile(@Nonnull OWLOntologyManager manager, String fileName) throws OWLOntologyCreationException, FileNotFoundException {
+        File file = new File(fileName);
+        return manager.loadOntologyFromOntologyDocument(new FileDocumentSource(file), new OWLOntologyLoaderConfiguration());
     }
 
     private final static String koala = "<?xml version=\"1.0\"?>\n"
