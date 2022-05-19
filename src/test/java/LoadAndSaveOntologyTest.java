@@ -1,41 +1,35 @@
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.semanticweb.HermiT.ReasonerFactory;
 import org.semanticweb.owlapi.apibinding.OWLManager;
-import org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat;
 import org.semanticweb.owlapi.io.FileDocumentSource;
-import org.semanticweb.owlapi.io.StreamDocumentTarget;
 import org.semanticweb.owlapi.io.StringDocumentSource;
 import org.semanticweb.owlapi.model.*;
-import org.semanticweb.owlapi.util.NNF;
+import org.semanticweb.owlapi.reasoner.InferenceType;
+import org.semanticweb.owlapi.reasoner.OWLReasoner;
+import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
 
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.util.Set;
 import java.util.stream.Stream;
 
 public class LoadAndSaveOntologyTest {
 
-    @Test
-    void loadOntologyTest() throws OWLOntologyCreationException, FileNotFoundException, OWLOntologyStorageException {
-        OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
-        OWLOntology ontology = load(manager);
-        OWLDocumentFormat format = manager.getOntologyFormat(ontology);
-        ManchesterSyntaxDocumentFormat manSyntaxFormat = new ManchesterSyntaxDocumentFormat();
-        assert format != null;
-        if (format.isPrefixOWLDocumentFormat()) {
-            manSyntaxFormat.copyPrefixesFrom(format.asPrefixOWLDocumentFormat());
-        }
-        File file = new File("ontology.txt");
-        FileOutputStream fileOutputStream = new FileOutputStream(file);
-        manager.saveOntology(ontology, manSyntaxFormat,
-                new StreamDocumentTarget(fileOutputStream));
+    private OWLOntologyManager manager;
+    private OWLOntology ontology;
+
+    private OWLDataFactory dataFactory;
+
+    @BeforeEach
+    void setUp() throws OWLOntologyCreationException, FileNotFoundException {
+        this.manager = OWLManager.createOWLOntologyManager();
+        this.ontology = loadFromFile(manager, "simpleontology.txt");
+        this.dataFactory = ontology.getOWLOntologyManager().getOWLDataFactory();
     }
 
     @Test
-    void loadSimpleOntologyFromFile() throws OWLOntologyCreationException, FileNotFoundException {
-        OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
-        OWLOntology ontology = loadFromFile(manager, "simpleontology.txt");
+    void loadSimpleOntologyFromFile() {
         ontology.logicalAxioms().forEach(System.out::println);
         System.out.println("ASSIOMI IN NNF");
         OWLDataFactory dataFactory = ontology.getOWLOntologyManager().getOWLDataFactory();
@@ -47,13 +41,14 @@ public class LoadAndSaveOntologyTest {
     }
 
     @Test
-    void traverseOntology() throws OWLOntologyCreationException {
-        OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
-        OWLOntology ontology = load(manager);
-        OWLDataFactory dataFactory = ontology.getOWLOntologyManager().getOWLDataFactory();
-        Stream<OWLAxiom> axiomsInNNF = ontology.logicalAxioms().map(l -> l.accept(new NNF(dataFactory)));
-        boolean equals = ontology.logicalAxioms().equals(axiomsInNNF);
-        assert !equals;
+    void reasonerTest() {
+        OWLReasonerFactory reasonerFactory = new ReasonerFactory();
+        OWLReasoner reasoner = reasonerFactory.createReasoner(this.ontology);
+        reasoner.precomputeInferences(InferenceType.CLASS_HIERARCHY);
+        OWLClass B = this.dataFactory.getOWLClass("B");
+        reasoner.getSubClasses(B);
+        reasoner.isSatisfiable(B);
+
     }
 
     private OWLOntology load(@Nonnull OWLOntologyManager manager) throws OWLOntologyCreationException {
