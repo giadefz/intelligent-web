@@ -11,13 +11,13 @@ public class ALCReasoner {
     protected final Stream<OWLAxiom> axiomsInNNF;
     protected final OWLClass temp;
     protected final OWLObjectIntersectionOf tBox;
-    protected Map<Individual, Set<OWLClassExpression>> blockingMap;
+    protected final Map<Individual, Set<OWLClassExpression>> blockingMap = new HashMap<>();
+    protected final Set<OWLClassExpression> literals = new HashSet<>();
 
     public ALCReasoner(OWLOntology ontology, OWLDataFactory dataFactory) {
         this.ontology = ontology;
         this.dataFactory = dataFactory;
         this.temp = dataFactory.getOWLClass("temp");
-        this.blockingMap = new HashMap<>();
         OWLDeclarationAxiom da = dataFactory.getOWLDeclarationAxiom(temp);
         ontology.add(da);
         this.axiomsInNNF = computeAxiomsInNNF();
@@ -36,10 +36,12 @@ public class ALCReasoner {
 
     public boolean isSatisfiable(OWLClassExpression classExpression) {
         OWLClassExpression nnfQuery = classExpression.getNNF();
-        Stream<OWLClassExpression> classExpressions = Stream.of(this.tBox, nnfQuery);
         Individual a = new Individual("a", 1l);
-        blockingMap.put(a, classExpressions.collect(Collectors.toSet()));
-        return tableaux(a, blockingMap, new HashSet<>());
+        Set<OWLClassExpression> classExpressions = new HashSet<>();
+        classExpressions.add(tBox);
+        blockingMap.put(a, classExpressions);
+
+        return tableaux(a, blockingMap, new HashSet<>(), new HashSet<>(), nnfQuery);
     }
 
     /**
@@ -49,14 +51,18 @@ public class ALCReasoner {
      * @param alreadyVisitedUnions
      * @return isClashFree
      */
-    public boolean tableaux(Individual individual, Map<Individual, Set<OWLClassExpression>> blockingMap, Set<OWLObjectUnionOf> alreadyVisitedUnions) {
+    public boolean tableaux(Individual individual, Map<Individual, Set<OWLClassExpression>> blockingMap, Set<OWLObjectUnionOf> alreadyVisitedUnions, Set<OWLClassExpression> literals, OWLClassExpression newClassExpression) {
         boolean ret = true;
+        if(newClassExpression.isClassExpressionLiteral()){
+            boolean clashFree = literals.add(newClassExpression);
+            if(!clashFree) return false;
+        }
         Set<OWLClassExpression> classExpressions = blockingMap.get(individual);
         classExpressions.addAll(
                 classExpressions.stream().flatMap(OWLClassExpression::conjunctSet)
                         .collect(Collectors.toSet())
         );
-        //check blocking
+        classExpressions.addAll(newClassExpression.asConjunctSet());
         Optional<OWLObjectUnionOf> owlUnionOf = classExpressions.stream()
                 .filter(p -> p instanceof OWLObjectUnionOf)
                 .filter(p -> !alreadyVisitedUnions.contains(p))
@@ -66,13 +72,11 @@ public class ALCReasoner {
         if(owlUnionOf.isPresent()){
             OWLObjectUnionOf owlObjectUnionOf = owlUnionOf.get();
             List<OWLClassExpression> operands = owlObjectUnionOf.operands().toList();
-            classExpressions.add(operands.get(0));
             alreadyVisitedUnions.add(owlObjectUnionOf);
-            ret = tableaux(individual, blockingMap, alreadyVisitedUnions);
+            ret = tableaux(individual, blockingMap, alreadyVisitedUnions, literals, operands.get(0));
             if(!ret){
-                classExpressions.remove(operands.get(0));
                 classExpressions.add(operands.get(1));
-                ret = tableaux(individual,blockingMap, alreadyVisitedUnions);
+                ret = tableaux(individual,blockingMap, alreadyVisitedUnions, literals, operands.get(1));
             }
         }
         //check esistenziale
