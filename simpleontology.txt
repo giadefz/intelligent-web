@@ -13,12 +13,8 @@ ObjectProperty: P
 
 Class: B
     SubClassOf:
-        C and (P only (not(C or D)))
+        C and (P only ((not C) or D))
 
 Class: A
     SubClassOf:
         B and (P some C)
-
-Class: E
-    EquivalentTo:
-        not(B and A)

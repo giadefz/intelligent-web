@@ -2,17 +2,16 @@ import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.util.NNF;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class NNFMod extends NNF {
 
     private final OWLClass temp;
 
     /**
-     * @param datafactory datafactory to use
+     * @param dataFactory dataFactory to use
      */
-    public NNFMod(OWLDataFactory datafactory, OWLClass temp) {
-        super(datafactory);
+    public NNFMod(OWLDataFactory dataFactory, OWLClass temp) {
+        super(dataFactory);
         this.temp = temp;
     }
 

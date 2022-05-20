@@ -45,9 +45,16 @@ public class LoadAndSaveOntologyTest {
         OWLReasonerFactory reasonerFactory = new ReasonerFactory();
         OWLReasoner reasoner = reasonerFactory.createReasoner(this.ontology);
         reasoner.precomputeInferences(InferenceType.CLASS_HIERARCHY);
-        OWLClass B = this.dataFactory.getOWLClass("B");
-        reasoner.getSubClasses(B);
-        reasoner.isSatisfiable(B);
+        OWLClass A = this.dataFactory.getOWLClass("A");
+        reasoner.getSubClasses(A);
+        reasoner.isSatisfiable(A);
+    }
+
+    @Test
+    void alcReasonerTest() {
+        ALCReasoner alcReasoner = new ALCReasoner(this.ontology, this.dataFactory);
+        OWLClass A = this.dataFactory.getOWLClass("A");
+        alcReasoner.isSatisfiable(A);
 
     }
 
