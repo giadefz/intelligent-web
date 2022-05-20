@@ -11,10 +11,11 @@ Class: D
 
 ObjectProperty: P
 
+Class: A
+    SubClassOf:
+        B and (P some C)
+
 Class: B
     SubClassOf:
         C and (P only ((not C) or D))
 
-Class: A
-    SubClassOf:
-        B and (P some C)

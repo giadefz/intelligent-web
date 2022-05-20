@@ -13,6 +13,7 @@ public class ALCReasoner {
     protected final OWLObjectIntersectionOf tBox;
     protected final Map<Individual, Set<OWLClassExpression>> blockingMap = new HashMap<>();
     protected final Set<OWLClassExpression> literals = new HashSet<>();
+    protected final IndividualFactory individualFactory = IndividualFactory.getInstance();
 
     public ALCReasoner(OWLOntology ontology, OWLDataFactory dataFactory) {
         this.ontology = ontology;
@@ -36,7 +37,7 @@ public class ALCReasoner {
 
     public boolean isSatisfiable(OWLClassExpression classExpression) {
         OWLClassExpression nnfQuery = classExpression.getNNF();
-        Individual a = new Individual("a", 1l);
+        Individual a = individualFactory.getNewIndividual();
         Set<OWLClassExpression> classExpressions = new HashSet<>();
         classExpressions.add(tBox);
         blockingMap.put(a, classExpressions);
@@ -51,18 +52,20 @@ public class ALCReasoner {
      * @param alreadyVisitedUnions
      * @return isClashFree
      */
+    //TODO: REFACTOR, CREATE CLASS FOR TABLEAUX
     public boolean tableaux(Individual individual, Map<Individual, Set<OWLClassExpression>> blockingMap, Set<OWLObjectUnionOf> alreadyVisitedUnions, Set<OWLClassExpression> literals, OWLClassExpression newClassExpression) {
-        boolean ret = true;
-        if(newClassExpression.isClassExpressionLiteral()){
-            boolean clashFree = literals.add(newClassExpression);
-            if(!clashFree) return false;
-        }
+        boolean ret;
+        if (clashFound(literals, newClassExpression)) return false;
         Set<OWLClassExpression> classExpressions = blockingMap.get(individual);
-        classExpressions.addAll(
-                classExpressions.stream().flatMap(OWLClassExpression::conjunctSet)
-                        .collect(Collectors.toSet())
-        );
-        classExpressions.addAll(newClassExpression.asConjunctSet());
+        applyAnd(newClassExpression, classExpressions);
+        ret = applyOr(individual, blockingMap, alreadyVisitedUnions, literals, classExpressions);
+
+        //handling EXISTENTIAL
+        return ret;
+    }
+
+    private boolean applyOr(Individual individual, Map<Individual, Set<OWLClassExpression>> blockingMap, Set<OWLObjectUnionOf> alreadyVisitedUnions, Set<OWLClassExpression> literals, Set<OWLClassExpression> classExpressions) {
+        boolean ret = true;
         Optional<OWLObjectUnionOf> owlUnionOf = classExpressions.stream()
                 .filter(p -> p instanceof OWLObjectUnionOf)
                 .filter(p -> !alreadyVisitedUnions.contains(p))
@@ -73,14 +76,31 @@ public class ALCReasoner {
             OWLObjectUnionOf owlObjectUnionOf = owlUnionOf.get();
             List<OWLClassExpression> operands = owlObjectUnionOf.operands().toList();
             alreadyVisitedUnions.add(owlObjectUnionOf);
-            ret = tableaux(individual, blockingMap, alreadyVisitedUnions, literals, operands.get(0));
+            ret = tableaux(individual, blockingMap, alreadyVisitedUnions, literals, operands.get(1));
             if(!ret){
                 classExpressions.add(operands.get(1));
-                ret = tableaux(individual,blockingMap, alreadyVisitedUnions, literals, operands.get(1));
+                ret = tableaux(individual, blockingMap, alreadyVisitedUnions, literals, operands.get(0));
             }
         }
-        //check esistenziale
         return ret;
+    }
+
+    private void applyAnd(OWLClassExpression newClassExpression, Set<OWLClassExpression> classExpressions) {
+        classExpressions.addAll(
+                classExpressions.stream().flatMap(OWLClassExpression::conjunctSet)
+                        .collect(Collectors.toSet())
+        );
+        classExpressions.addAll(newClassExpression.asConjunctSet());
+    }
+
+    private boolean clashFound(Set<OWLClassExpression> literals, OWLClassExpression newClassExpression) {
+        if(newClassExpression.isClassExpressionLiteral()){
+            if(literals.contains(newClassExpression.getComplementNNF())){
+                return true;
+            }
+            literals.add(newClassExpression);
+        }
+        return false;
     }
 
 }
