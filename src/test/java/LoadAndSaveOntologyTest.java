@@ -12,6 +12,8 @@ import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public class LoadAndSaveOntologyTest {
@@ -24,20 +26,27 @@ public class LoadAndSaveOntologyTest {
     @BeforeEach
     void setUp() throws OWLOntologyCreationException, FileNotFoundException {
         this.manager = OWLManager.createOWLOntologyManager();
-        this.ontology = loadFromFile(manager, "simpleontology.txt");
+//        this.ontology = loadFromFile(manager, "simpleontology.txt");
+        this.ontology = loadFromFile(manager, "otherontology.txt");
         this.dataFactory = ontology.getOWLOntologyManager().getOWLDataFactory();
     }
 
     @Test
-    void loadSimpleOntologyFromFile() {
-        ontology.logicalAxioms().forEach(System.out::println);
-        System.out.println("ASSIOMI IN NNF");
-        OWLDataFactory dataFactory = ontology.getOWLOntologyManager().getOWLDataFactory();
-        OWLClass temp = dataFactory.getOWLClass("temp");
-        OWLDeclarationAxiom da = dataFactory.getOWLDeclarationAxiom(temp);
-        ontology.add(da);
-        Stream<OWLAxiom> axiomsInNNF = ontology.logicalAxioms().map(l -> l.accept(new NNFMod(dataFactory, temp)));
-        axiomsInNNF.forEach(System.out::println);
+    void loadKoalaOntologyTest() throws OWLOntologyCreationException {
+        OWLOntology ontologyKoala = this.loadKoalaOntology(this.manager);
+        ontologyKoala.logicalAxioms().forEach(System.out::println);
+    }
+
+    @Test
+    void getObjectPropertyAxiomTest() {
+        TableauxIndividual newIndividual = TableauxIndividualFactory.getInstance().getNewIndividual();
+        TableauxIndividual newIndividual2 = TableauxIndividualFactory.getInstance().getNewIndividual();
+        Optional<OWLObjectProperty> any = this.ontology.objectPropertiesInSignature()
+                .findAny();
+        OWLObjectProperty owlObjectProperty = any.get();
+        OWLObjectPropertyAssertionAxiom owlObjectPropertyAssertionAxiom =
+                this.dataFactory.getOWLObjectPropertyAssertionAxiom(owlObjectProperty, newIndividual, newIndividual2);
+        owlObjectPropertyAssertionAxiom.isInSimplifiedForm();
     }
 
     @Test
@@ -54,12 +63,11 @@ public class LoadAndSaveOntologyTest {
     void alcReasonerTest() {
         ALCReasoner alcReasoner = new ALCReasoner(this.ontology, this.dataFactory);
         OWLClass A = this.dataFactory.getOWLClass("A");
-        alcReasoner.isSatisfiable(A);
+        System.out.println(alcReasoner.isSatisfiable(A));
 
     }
 
-    private OWLOntology load(@Nonnull OWLOntologyManager manager) throws OWLOntologyCreationException {
-        // in this test, the ontology is loaded from a string
+    private OWLOntology loadKoalaOntology(@Nonnull OWLOntologyManager manager) throws OWLOntologyCreationException {
         return manager.loadOntologyFromOntologyDocument(new StringDocumentSource(koala));
     }
 
