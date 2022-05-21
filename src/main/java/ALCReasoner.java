@@ -11,9 +11,9 @@ public class ALCReasoner {
     protected final Stream<OWLAxiom> axiomsInNNF;
     protected final OWLClass temp;
     protected final OWLObjectIntersectionOf tBox;
-    protected final Map<Individual, Set<OWLClassExpression>> blockingMap = new HashMap<>();
-    protected final Set<OWLClassExpression> literals = new HashSet<>();
-    protected final IndividualFactory individualFactory = IndividualFactory.getInstance();
+    protected final Map<TableauxIndividual, Set<OWLClassExpression>> blockingMap = new HashMap<>();
+    protected final TableauxIndividualFactory tableauxIndividualFactory = TableauxIndividualFactory.getInstance();
+    protected final HashMap<TableauxIndividual, Set<OWLClassExpression>> literals = new HashMap<>();
 
     public ALCReasoner(OWLOntology ontology, OWLDataFactory dataFactory) {
         this.ontology = ontology;
@@ -37,35 +37,47 @@ public class ALCReasoner {
 
     public boolean isSatisfiable(OWLClassExpression classExpression) {
         OWLClassExpression nnfQuery = classExpression.getNNF();
-        Individual a = individualFactory.getNewIndividual();
+        TableauxIndividual a = tableauxIndividualFactory.getNewIndividual();
         Set<OWLClassExpression> classExpressions = new HashSet<>();
         classExpressions.add(tBox);
         blockingMap.put(a, classExpressions);
-
-        return tableaux(a, blockingMap, new HashSet<>(), new HashSet<>(), nnfQuery);
+        return tableaux(a, new HashSet<>(), nnfQuery);
     }
 
     /**
      *
-     * @param individual
-     * @param blockingMap
+     * @param tableauxIndividual
      * @param alreadyVisitedUnions
      * @return isClashFree
      */
-    //TODO: REFACTOR, CREATE CLASS FOR TABLEAUX
-    public boolean tableaux(Individual individual, Map<Individual, Set<OWLClassExpression>> blockingMap, Set<OWLObjectUnionOf> alreadyVisitedUnions, Set<OWLClassExpression> literals, OWLClassExpression newClassExpression) {
+    public boolean tableaux(TableauxIndividual tableauxIndividual, Set<OWLObjectUnionOf> alreadyVisitedUnions, OWLClassExpression newClassExpression) {
         boolean ret;
-        if (clashFound(literals, newClassExpression)) return false;
-        Set<OWLClassExpression> classExpressions = blockingMap.get(individual);
+        initializeLiteralsSet(literals, tableauxIndividual);
+        Set<OWLClassExpression> classExpressions = blockingMap.get(tableauxIndividual);
         applyAnd(newClassExpression, classExpressions);
-        ret = applyOr(individual, blockingMap, alreadyVisitedUnions, literals, classExpressions);
-
+        if (clashFound(literals.get(tableauxIndividual), newClassExpression)){
+            removeClassExpressions(classExpressions, newClassExpression.conjunctSet());
+            return false;
+        }
+        ret = applyOr(tableauxIndividual, alreadyVisitedUnions, literals.get(tableauxIndividual), classExpressions);
         //handling EXISTENTIAL
+        //before going up, we must remove literals added to L(x)
+        removeLiterals(literals.get(tableauxIndividual), newClassExpression.asConjunctSet());
+        removeClassExpressions(classExpressions, newClassExpression.conjunctSet());
         return ret;
     }
 
-    private boolean applyOr(Individual individual, Map<Individual, Set<OWLClassExpression>> blockingMap, Set<OWLObjectUnionOf> alreadyVisitedUnions, Set<OWLClassExpression> literals, Set<OWLClassExpression> classExpressions) {
-        boolean ret = true;
+    private void removeClassExpressions(Set<OWLClassExpression> classExpressions, Stream<OWLClassExpression> classExpressionsToRemove) {
+        classExpressionsToRemove
+                .forEach(classExpressions::remove);
+    }
+
+    private void initializeLiteralsSet(HashMap<TableauxIndividual, Set<OWLClassExpression>> literals, TableauxIndividual tableauxIndividual) {
+        literals.computeIfAbsent(tableauxIndividual, k -> new HashSet<>());
+    }
+
+    private boolean applyOr(TableauxIndividual tableauxIndividual, Set<OWLObjectUnionOf> alreadyVisitedUnions, Set<OWLClassExpression> literals, Set<OWLClassExpression> classExpressions) {
+
         Optional<OWLObjectUnionOf> owlUnionOf = classExpressions.stream()
                 .filter(p -> p instanceof OWLObjectUnionOf)
                 .filter(p -> !alreadyVisitedUnions.contains(p))
@@ -76,16 +88,28 @@ public class ALCReasoner {
             OWLObjectUnionOf owlObjectUnionOf = owlUnionOf.get();
             List<OWLClassExpression> operands = owlObjectUnionOf.operands().toList();
             alreadyVisitedUnions.add(owlObjectUnionOf);
-            ret = tableaux(individual, blockingMap, alreadyVisitedUnions, literals, operands.get(1));
-            if(!ret){
-                classExpressions.add(operands.get(1));
-                ret = tableaux(individual, blockingMap, alreadyVisitedUnions, literals, operands.get(0));
+            boolean clashFree = tableaux(tableauxIndividual, alreadyVisitedUnions, operands.get(0));
+            if(!clashFree){ //try other branch
+                clashFree = tableaux(tableauxIndividual, alreadyVisitedUnions, operands.get(1));
+                return clashFree; //if this branch also is not clash free, returns false
             }
         }
-        return ret;
+        return true;
+    }
+
+    /**
+     * When going up in the chain, we must remove literals from L(x)
+     * @param literals
+     * @param classExpressions
+     */
+    private void removeLiterals(Set<OWLClassExpression> literals, Set<OWLClassExpression> classExpressions) {
+        classExpressions.stream()
+                .filter(OWLClassExpression::isClassExpressionLiteral)
+                .forEach(literals::remove);
     }
 
     private void applyAnd(OWLClassExpression newClassExpression, Set<OWLClassExpression> classExpressions) {
+        //TODO: QUESTO VA QUA?? TEORICAMENTE AGGIUNGE COSE SOLO ALLA PRIMA ESECUZIONE, OVVERO QUANDO SI SPACCHETTA LA TBOX
         classExpressions.addAll(
                 classExpressions.stream().flatMap(OWLClassExpression::conjunctSet)
                         .collect(Collectors.toSet())
@@ -94,13 +118,17 @@ public class ALCReasoner {
     }
 
     private boolean clashFound(Set<OWLClassExpression> literals, OWLClassExpression newClassExpression) {
-        if(newClassExpression.isClassExpressionLiteral()){
-            if(literals.contains(newClassExpression.getComplementNNF())){
-                return true;
-            }
-            literals.add(newClassExpression);
+        boolean clashFound = newClassExpression.conjunctSet()
+                .map(OWLClassExpression::getComplementNNF)
+                .filter(OWLClassExpression::isClassExpressionLiteral)
+                .anyMatch(literals::contains);
+        if(clashFound) return  true;
+        else { //if no clash is found, we add every literal to L(x)
+            newClassExpression.conjunctSet()
+            .filter(OWLClassExpression::isClassExpressionLiteral)
+                    .forEach(literals::add);
+            return false;
         }
-        return false;
     }
 
 }
