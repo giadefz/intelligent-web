@@ -1,3 +1,7 @@
+import org.semanticweb.owlapi.model.OWLClassExpression;
+
+import java.util.Set;
+
 public class TableauxIndividualFactory {
 
     private static TableauxIndividualFactory instance;
@@ -16,6 +20,11 @@ public class TableauxIndividualFactory {
     }
 
     public TableauxIndividual getNewIndividual(){
+        this.maxId++;
+        //TODO: GENERATE NAME
+        return new TableauxIndividual(maxId.toString(), maxId);
+    }
+    public TableauxIndividual getNewIndividual(Set<OWLClassExpression> tBox){
         this.maxId++;
         //TODO: GENERATE NAME
         return new TableauxIndividual(maxId.toString(), maxId);
