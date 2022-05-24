@@ -68,4 +68,13 @@ public class TableauxIndividual extends OWLNamedIndividualImpl implements Clonea
             return new TableauxIndividual(this.getIRI().getIRIString(), this.getId(), this.getFather().orElse(null));
         }
     }
+
+    public Set<OWLClassExpression> getLiterals() {
+        return literals;
+    }
+
+    public boolean isBlocked(TableauxIndividual father){
+        return father.getLiterals().containsAll(this.getLiterals());
+    }
+
 }

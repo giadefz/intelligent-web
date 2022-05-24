@@ -2,6 +2,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import org.semanticweb.owlapi.model.OWLClassExpression;
+import org.semanticweb.owlapi.model.OWLObjectPropertyAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 
 import java.util.List;
@@ -18,17 +19,17 @@ public class NodeInfo {
     private final Stream<OWLClassExpression> classExpressions;
     private final Set<OWLObjectUnionOf> alreadyVisitedUnions;
     private final OWLClassExpression newClassExpression;
+    private final OWLObjectPropertyAssertionAxiom propertyAssertionAxiom;
 
-    public static NodeInfo getNewNode(NodeInfo oldNode, OWLObjectUnionOf visitingUnionOf, int indexOfVisitingOperand,
-                                      Stream<OWLClassExpression> newClassExpressions){
-        List<OWLClassExpression> operands = visitingUnionOf.operands().toList();
+    public static NodeInfo getNewNode(NodeInfo oldNode, Stream<OWLClassExpression> newClassExpressions,
+                                      OWLClassExpression newClassExpression, OWLObjectUnionOf visitingUnionOf){
         return NodeInfo.builder()
                 .alreadyVisitedUnions(
                         Stream.concat(oldNode.getAlreadyVisitedUnions().stream(), Stream.of(visitingUnionOf))
                                 .collect(Collectors.toSet()))
                 .individual(oldNode.getIndividual().clone())
                 .classExpressions(newClassExpressions)
-                .newClassExpression(operands.get(indexOfVisitingOperand))
+                .newClassExpression(newClassExpression)
                 .build();
     }
 

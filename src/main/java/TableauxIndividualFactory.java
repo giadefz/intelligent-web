@@ -24,11 +24,6 @@ public class TableauxIndividualFactory {
         //TODO: GENERATE NAME
         return new TableauxIndividual(maxId.toString(), maxId);
     }
-    public TableauxIndividual getNewIndividual(Set<OWLClassExpression> tBox){
-        this.maxId++;
-        //TODO: GENERATE NAME
-        return new TableauxIndividual(maxId.toString(), maxId);
-    }
 
     public TableauxIndividual getNewIndividual(TableauxIndividual father){
         this.maxId++;

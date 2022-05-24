@@ -38,100 +38,103 @@ public class ALCReasoner {
     public boolean isSatisfiable(OWLClassExpression classExpression) {
         OWLClassExpression nnfQuery = classExpression.getNNF();
         TableauxIndividual a = tableauxIndividualFactory.getNewIndividual();
-        Set<OWLClassExpression> classExpressions = new HashSet<>();
-        classExpressions.add(tBox);
-        blockingMap.put(a, classExpressions);
-        return tableaux(a, new HashSet<>(), nnfQuery);
-    }
-
-    public boolean isSat(OWLClassExpression classExpression) {
-        OWLClassExpression nnfQuery = classExpression.getNNF();
-        TableauxIndividual a = tableauxIndividualFactory.getNewIndividual(tBox.asConjunctSet());
         return isClashFree(NodeInfo.builder()
                 .individual(a)
-                .classExpressions(tBox.conjunctSet())
-                .newClassExpression(nnfQuery)
+                .classExpressions(Stream.empty())
+                .newClassExpression(this.dataFactory.getOWLObjectIntersectionOf(nnfQuery, this.tBox))
                 .alreadyVisitedUnions(Collections.emptySet())
                 .build());
     }
 
-    /**
-     * @param tableauxIndividual
-     * @param alreadyVisitedUnions
-     * @return isClashFree
-     */
-    public boolean tableaux(TableauxIndividual tableauxIndividual, Set<OWLObjectUnionOf> alreadyVisitedUnions, OWLClassExpression newClassExpression) {
-        boolean ret;
-        initializeLiteralsSet(literals, tableauxIndividual);
-        Set<OWLClassExpression> classExpressions = blockingMap.get(tableauxIndividual);
-        applyAnd(newClassExpression, classExpressions);
-        if (clashFound(literals.get(tableauxIndividual), newClassExpression)) {
-            removeClassExpressions(classExpressions, newClassExpression.conjunctSet());
-            return false;
-        }
-        ret = applyOr(tableauxIndividual, alreadyVisitedUnions, classExpressions);
-        //handling EXISTENTIAL
-        //before going up, we must remove literals added to L(x)
-        removeLiterals(literals.get(tableauxIndividual), newClassExpression.asConjunctSet());
-        removeClassExpressions(classExpressions, newClassExpression.conjunctSet());
-        //removeAlreadyVisitedUnion
-        return ret;
-    }
-
     public boolean isClashFree(NodeInfo nodeInfo) {
         TableauxIndividual currentIndividual = nodeInfo.getIndividual();
-        boolean clashFound = currentIndividual.addLiteral(nodeInfo.getNewClassExpression());
-        if (clashFound) return false;
-        Stream<OWLClassExpression> newClassExpressions =
-                applyAnd(nodeInfo.getNewClassExpression(), nodeInfo.getClassExpressions());
-        return applyOr(nodeInfo, newClassExpressions);
-
+        if (isClashFound(nodeInfo, currentIndividual)) return false;
+        Set<OWLClassExpression> newClassExpressions =
+                applyAnd(nodeInfo.getNewClassExpression(), nodeInfo.getClassExpressions()).collect(Collectors.toSet());
+        if(applyOr(nodeInfo, newClassExpressions)){
+            return applyExistential(nodeInfo, newClassExpressions);
+        }
+        return false;
     }
 
-    private void removeClassExpressions(Set<OWLClassExpression> classExpressions, Stream<OWLClassExpression> classExpressionsToRemove) {
-        classExpressionsToRemove
-                .forEach(classExpressions::remove);
+    private boolean isClashFound(NodeInfo nodeInfo, TableauxIndividual currentIndividual) {
+        return nodeInfo.getNewClassExpression()
+                .conjunctSet()
+                .filter(OWLClassExpression::isClassExpressionLiteral)
+                .anyMatch(currentIndividual::addLiteral);
     }
 
-    private void initializeLiteralsSet(HashMap<TableauxIndividual, Set<OWLClassExpression>> literals, TableauxIndividual tableauxIndividual) {
-        literals.computeIfAbsent(tableauxIndividual, k -> new HashSet<>());
-    }
-
-    private boolean applyOr(TableauxIndividual tableauxIndividual, Set<OWLObjectUnionOf> alreadyVisitedUnions, Set<OWLClassExpression> classExpressions) {
-
-        Optional<OWLObjectUnionOf> owlUnionOf = classExpressions.stream()
-                .filter(p -> p instanceof OWLObjectUnionOf)
-                .filter(p -> !alreadyVisitedUnions.contains(p))
-                .map(p -> (OWLObjectUnionOf) p)
-                .findAny();
-
-        if (owlUnionOf.isPresent()) {
-            OWLObjectUnionOf owlObjectUnionOf = owlUnionOf.get();
-            List<OWLClassExpression> operands = owlObjectUnionOf.operands().toList();
-            alreadyVisitedUnions.add(owlObjectUnionOf);
-            boolean clashFree = tableaux(tableauxIndividual, alreadyVisitedUnions, operands.get(0));
-            if (!clashFree) { //try other branch
-                clashFree = tableaux(tableauxIndividual, alreadyVisitedUnions, operands.get(1));
-                return clashFree; //if this branch also is not clash free, returns false
-            }
+    private boolean applyExistential(NodeInfo nodeInfo, Set<OWLClassExpression> newClassExpressions) {
+        Set<OWLObjectSomeValuesFrom> owlObjectSomeValuesFroms = newClassExpressions.stream()
+                .filter(p -> p instanceof OWLObjectSomeValuesFrom)
+                .map(p -> (OWLObjectSomeValuesFrom) p)
+                .collect(Collectors.toSet());
+        if(!owlObjectSomeValuesFroms.isEmpty()){
+            return owlObjectSomeValuesFroms.stream()
+                    .allMatch(p -> applyExistentialQuantification(p, nodeInfo));
         }
         return true;
     }
 
-    private boolean applyOr(NodeInfo nodeInfo, Stream<OWLClassExpression> newClassExpressions) {
-        Optional<OWLObjectUnionOf> unionOf = newClassExpressions.
-                filter(p -> p instanceof OWLObjectUnionOf)
-                .filter(p -> !nodeInfo.getAlreadyVisitedUnions().contains(p))
-                .map(p -> (OWLObjectUnionOf) p)
-                .findAny();
+    private boolean applyExistentialQuantification(OWLObjectSomeValuesFrom someValuesFrom, NodeInfo nodeInfo){
+        OWLObjectProperty owlObjectProperty = someValuesFrom.objectPropertiesInSignature()
+                .findAny()
+                .get();
+        OWLClassExpression filler = someValuesFrom.getFiller();
+        TableauxIndividual father = nodeInfo.getIndividual();
+        TableauxIndividual son = tableauxIndividualFactory.getNewIndividual();
+        filler.conjunctSet()
+                .filter(OWLClassExpression::isClassExpressionLiteral)
+                .forEach(son::addLiteral);
+        OWLObjectPropertyAssertionAxiom property =
+                this.dataFactory.getOWLObjectPropertyAssertionAxiom(owlObjectProperty, father, son);
+        return isClashFree(NodeInfo.builder()
+                .individual(son)
+                .classExpressions(Stream.empty())
+                .newClassExpression(getSonNewClassExpressions(father, son, filler))
+                .alreadyVisitedUnions(Collections.emptySet())
+                .propertyAssertionAxiom(property)
+                .build()
+        );
+    }
+
+    private OWLClassExpression getSonNewClassExpressions(TableauxIndividual father, TableauxIndividual son, OWLClassExpression filler){
+        //todo: check quantificatore per ogni
+        if(son.isBlocked(father)){
+            return filler;
+        }else{
+            return this.dataFactory.getOWLObjectIntersectionOf(filler, this.tBox);
+        }
+    }
+
+
+    /**
+     *
+     * @param nodeInfo
+     * @param newClassExpressions
+     * @return if or is clash free
+     */
+    private boolean applyOr(NodeInfo nodeInfo, Set<OWLClassExpression> newClassExpressions) {
+        Optional<OWLObjectUnionOf> unionOf = getUnvisitedUnionOf(newClassExpressions, nodeInfo.getAlreadyVisitedUnions());
         if (unionOf.isPresent()) {
-            boolean clashFree = isClashFree(NodeInfo.getNewNode(nodeInfo, unionOf.get(), 0, newClassExpressions));
-            if(!clashFree){
-                clashFree = isClashFree(NodeInfo.getNewNode(nodeInfo, unionOf.get(), 1, newClassExpressions));
-                return clashFree;
-            }
+            OWLObjectUnionOf owlObjectUnionOf = unionOf.get();
+            long clashedOperands = owlObjectUnionOf.operands()
+                    .takeWhile(p -> !isClashFree(NodeInfo.getNewNode(nodeInfo, newClassExpressions.stream(), p, owlObjectUnionOf)))
+                    .count();
+            //if all operands were traversed, it means that all branches result in clash -> return false
+            return clashedOperands!=owlObjectUnionOf.operands().count();
+
         }
         return true;
+    }
+
+    private Optional<OWLObjectUnionOf> getUnvisitedUnionOf(Set<OWLClassExpression> newClassExpressions, Set<OWLObjectUnionOf> nodeInfo) {
+        return newClassExpressions
+                .stream()
+                .filter(p -> p instanceof OWLObjectUnionOf)
+                .filter(p -> !nodeInfo.contains(p))
+                .map(p -> (OWLObjectUnionOf) p)
+                .findAny();
     }
 
     /**
@@ -156,7 +159,7 @@ public class ALCReasoner {
     }
 
     private Stream<OWLClassExpression> applyAnd(OWLClassExpression newClassExpression, Stream<OWLClassExpression> classExpressions) {
-        return Stream.concat(newClassExpression.conjunctSet(), classExpressions);
+        return Stream.concat(newClassExpression.conjunctSet(), classExpressions).distinct();
     }
 
     private boolean clashFound(Set<OWLClassExpression> literals, OWLClassExpression newClassExpression) {
