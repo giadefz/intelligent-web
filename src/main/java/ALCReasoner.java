@@ -11,9 +11,7 @@ public class ALCReasoner {
     protected final Stream<OWLAxiom> axiomsInNNF;
     protected final OWLClass temp;
     protected final OWLObjectIntersectionOf tBox;
-    protected final Map<TableauxIndividual, Set<OWLClassExpression>> blockingMap = new HashMap<>();
     protected final TableauxIndividualFactory tableauxIndividualFactory = TableauxIndividualFactory.getInstance();
-    protected final HashMap<TableauxIndividual, Set<OWLClassExpression>> literals = new HashMap<>();
 
     public ALCReasoner(OWLOntology ontology, OWLDataFactory dataFactory) {
         this.ontology = ontology;
@@ -35,8 +33,8 @@ public class ALCReasoner {
         return dataFactory.getOWLObjectIntersectionOf(superClasses);
     }
 
-    public boolean isSatisfiable(OWLClassExpression classExpression) {
-        OWLClassExpression nnfQuery = classExpression.getNNF();
+    public boolean isSatisfiable(OWLClassExpression query) {
+        OWLClassExpression nnfQuery = query.getNNF();
         TableauxIndividual a = tableauxIndividualFactory.getNewIndividual();
         return isClashFree(NodeInfo.builder()
                 .individual(a)
@@ -61,7 +59,7 @@ public class ALCReasoner {
         return nodeInfo.getNewClassExpression()
                 .conjunctSet()
                 .filter(OWLClassExpression::isClassExpressionLiteral)
-                .anyMatch(currentIndividual::addLiteral);
+                .anyMatch(currentIndividual::addingLiteralCausesClash);
     }
 
     private boolean applyExistential(NodeInfo nodeInfo, Set<OWLClassExpression> newClassExpressions) {
@@ -85,7 +83,7 @@ public class ALCReasoner {
         TableauxIndividual son = tableauxIndividualFactory.getNewIndividual();
         filler.conjunctSet()
                 .filter(OWLClassExpression::isClassExpressionLiteral)
-                .forEach(son::addLiteral);
+                .forEach(son::addingLiteralCausesClash);
         OWLObjectPropertyAssertionAxiom property =
                 this.dataFactory.getOWLObjectPropertyAssertionAxiom(owlObjectProperty, father, son);
         return isClashFree(NodeInfo.builder()
@@ -112,7 +110,7 @@ public class ALCReasoner {
      *
      * @param nodeInfo
      * @param newClassExpressions
-     * @return if or is clash free
+     * @return true if or is clash free
      */
     private boolean applyOr(NodeInfo nodeInfo, Set<OWLClassExpression> newClassExpressions) {
         Optional<OWLObjectUnionOf> unionOf = getUnvisitedUnionOf(newClassExpressions, nodeInfo.getAlreadyVisitedUnions());
@@ -128,52 +126,17 @@ public class ALCReasoner {
         return true;
     }
 
-    private Optional<OWLObjectUnionOf> getUnvisitedUnionOf(Set<OWLClassExpression> newClassExpressions, Set<OWLObjectUnionOf> nodeInfo) {
+    private Optional<OWLObjectUnionOf> getUnvisitedUnionOf(Set<OWLClassExpression> newClassExpressions, Set<OWLObjectUnionOf> alreadyVisitedUnions) {
         return newClassExpressions
                 .stream()
                 .filter(p -> p instanceof OWLObjectUnionOf)
-                .filter(p -> !nodeInfo.contains(p))
+                .filter(p -> !alreadyVisitedUnions.contains(p))
                 .map(p -> (OWLObjectUnionOf) p)
                 .findAny();
     }
 
-    /**
-     * When going up in the chain, we must remove literals from L(x)
-     *
-     * @param literals
-     * @param classExpressions
-     */
-    private void removeLiterals(Set<OWLClassExpression> literals, Set<OWLClassExpression> classExpressions) {
-        classExpressions.stream()
-                .filter(OWLClassExpression::isClassExpressionLiteral)
-                .forEach(literals::remove);
-    }
-
-    private void applyAnd(OWLClassExpression newClassExpression, Set<OWLClassExpression> classExpressions) {
-        //TODO: QUESTO VA QUA?? TEORICAMENTE AGGIUNGE COSE SOLO ALLA PRIMA ESECUZIONE, OVVERO QUANDO SI SPACCHETTA LA TBOX
-        classExpressions.addAll(
-                classExpressions.stream().flatMap(OWLClassExpression::conjunctSet)
-                        .collect(Collectors.toSet())
-        );
-        classExpressions.addAll(newClassExpression.asConjunctSet());
-    }
-
     private Stream<OWLClassExpression> applyAnd(OWLClassExpression newClassExpression, Stream<OWLClassExpression> classExpressions) {
         return Stream.concat(newClassExpression.conjunctSet(), classExpressions).distinct();
-    }
-
-    private boolean clashFound(Set<OWLClassExpression> literals, OWLClassExpression newClassExpression) {
-        boolean clashFound = newClassExpression.conjunctSet()
-                .map(OWLClassExpression::getComplementNNF)
-                .filter(OWLClassExpression::isClassExpressionLiteral)
-                .anyMatch(literals::contains);
-        if (clashFound) return true;
-        else { //if no clash is found, we add every literal to L(x)
-            newClassExpression.conjunctSet()
-                    .filter(OWLClassExpression::isClassExpressionLiteral)
-                    .forEach(literals::add);
-            return false;
-        }
     }
 
 }

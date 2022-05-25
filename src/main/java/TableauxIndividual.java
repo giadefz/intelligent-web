@@ -5,7 +5,6 @@ import uk.ac.manchester.cs.owl.owlapi.OWLNamedIndividualImpl;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class TableauxIndividual extends OWLNamedIndividualImpl implements Cloneable{
     
@@ -52,7 +51,7 @@ public class TableauxIndividual extends OWLNamedIndividualImpl implements Clonea
      * @param literal: the new literal
      * @return true if literal causes clash, false otherwise
      */
-    public boolean addLiteral(OWLClassExpression literal){
+    public boolean addingLiteralCausesClash(OWLClassExpression literal){
         assert literal.isClassExpressionLiteral();
         literals.add(literal);
         return literals.contains(literal.getComplementNNF());

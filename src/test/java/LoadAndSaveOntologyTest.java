@@ -27,8 +27,8 @@ public class LoadAndSaveOntologyTest {
     void setUp() throws OWLOntologyCreationException, FileNotFoundException {
         this.manager = OWLManager.createOWLOntologyManager();
 //        this.ontology = loadFromFile(manager, "simpleontology.txt");
-        this.ontology = loadFromFile(manager, "otherontology.txt");
-//        this.ontology = loadFromFile(manager, "ontont.txt");
+//        this.ontology = loadFromFile(manager, "otherontology.txt");
+        this.ontology = loadFromFile(manager, "ontont.txt");
         this.dataFactory = ontology.getOWLOntologyManager().getOWLDataFactory();
     }
 
