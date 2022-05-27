@@ -4,12 +4,15 @@ Prefix: rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 Prefix: rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 Prefix: xsd: <http://www.w3.org/2001/XMLSchema#>
 
-Class: D
 
 Class: C
 
-ObjectProperty: P
+
+Class: B
+    SubClassOf:
+        C
+
 
 Class: A
     SubClassOf:
-        P some (D or C)
+        C

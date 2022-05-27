@@ -7,11 +7,13 @@ Prefix: xsd: <http://www.w3.org/2001/XMLSchema#>
 
 Class: D
 
+Class: C
+
 ObjectProperty: P
 
 Class: B
     SubClassOf:
-        P some D
+        P some (D or C)
 
 Class: A
     SubClassOf:
