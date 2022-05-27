@@ -11,10 +11,7 @@ public class ALCReasoner {
     protected final Stream<OWLAxiom> axiomsInNNF;
     protected final OWLClass temp;
     protected final OWLObjectIntersectionOf tBox;
-    protected final Map<TableauxIndividual, Set<OWLClassExpression>> blockingMap = new HashMap<>();
     protected final TableauxIndividualFactory tableauxIndividualFactory = TableauxIndividualFactory.getInstance();
-    protected final HashMap<TableauxIndividual, Set<OWLClassExpression>> literals = new HashMap<>();
-
     public ALCReasoner(OWLOntology ontology, OWLDataFactory dataFactory) {
         this.ontology = ontology;
         this.dataFactory = dataFactory;

@@ -13,8 +13,9 @@ import java.util.stream.Stream;
 @Builder
 @Getter
 @AllArgsConstructor
-public class NodeInfo {
+public class NodeInfo implements RdfSerializable{
 
+    private final NodeInfo father;
     private final TableauxIndividual individual;
     private final Stream<OWLClassExpression> classExpressions;
     private final Set<OWLObjectUnionOf> alreadyVisitedUnions;
@@ -24,6 +25,7 @@ public class NodeInfo {
     public static NodeInfo getNewNode(NodeInfo oldNode, Stream<OWLClassExpression> newClassExpressions,
                                       OWLClassExpression newClassExpression, OWLObjectUnionOf visitingUnionOf){
         return NodeInfo.builder()
+                .father(oldNode)
                 .alreadyVisitedUnions(
                         Stream.concat(oldNode.getAlreadyVisitedUnions().stream(), Stream.of(visitingUnionOf))
                                 .collect(Collectors.toSet()))
@@ -33,4 +35,8 @@ public class NodeInfo {
                 .build();
     }
 
+    @Override
+    public String toRdf() {
+        return null;
+    }
 }

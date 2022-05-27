@@ -1,3 +1,5 @@
+import org.apache.jena.rdf.model.*;
+import org.apache.jena.vocabulary.VCARD;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.semanticweb.HermiT.ReasonerFactory;
@@ -27,8 +29,8 @@ public class LoadAndSaveOntologyTest {
     void setUp() throws OWLOntologyCreationException, FileNotFoundException {
         this.manager = OWLManager.createOWLOntologyManager();
 //        this.ontology = loadFromFile(manager, "simpleontology.txt");
-        this.ontology = loadFromFile(manager, "otherontology.txt");
-//        this.ontology = loadFromFile(manager, "ontont.txt");
+//        this.ontology = loadFromFile(manager, "otherontology.txt");
+        this.ontology = loadFromFile(manager, "ontont.txt");
         this.dataFactory = ontology.getOWLOntologyManager().getOWLDataFactory();
     }
 
@@ -74,6 +76,15 @@ public class LoadAndSaveOntologyTest {
     private OWLOntology loadFromFile(@Nonnull OWLOntologyManager manager, String fileName) throws OWLOntologyCreationException, FileNotFoundException {
         File file = new File(fileName);
         return manager.loadOntologyFromOntologyDocument(new FileDocumentSource(file), new OWLOntologyLoaderConfiguration());
+    }
+
+    @Test
+    void name() {
+        Model model = ModelFactory.createDefaultModel();
+        Resource testResource = model.createResource("http://locahost/root")
+                .addProperty(VCARD.Family, model.createResource("http://locahost/test1").addProperty(VCARD.Family, "CoC"))
+                .addProperty(VCARD.Family, "test2_label");
+        model.write(System.out);
     }
 
     private final static String koala = "<?xml version=\"1.0\"?>\n"
