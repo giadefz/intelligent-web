@@ -48,41 +48,43 @@ public class ALCReasoner {
         TableauxIndividual currentIndividual = nodeInfo.getIndividual();
         if (isClashFound(nodeInfo, currentIndividual)) return false;
         Set<OWLClassExpression> newClassExpressions =
-                applyAnd(nodeInfo.getNewClassExpression(), nodeInfo.getClassExpressions()).collect(Collectors.toSet());
-        if(applyOr(nodeInfo, newClassExpressions)){
-            return applyExistential(nodeInfo, newClassExpressions);
-        }
-        return false;
+                applyAnd(nodeInfo.getNewClassExpression(), nodeInfo.getClassExpressions())
+                        .collect(Collectors.toSet());
+        return applyOr(nodeInfo, newClassExpressions);
     }
 
     private boolean isClashFound(NodeInfo nodeInfo, TableauxIndividual currentIndividual) {
         return nodeInfo.getNewClassExpression()
                 .conjunctSet()
-                .anyMatch(currentIndividual::addingLiteralCausesClash);
+                .anyMatch(currentIndividual::addingLabelCausesClash);
     }
 
     private boolean applyExistential(NodeInfo nodeInfo, Set<OWLClassExpression> newClassExpressions) {
-        Set<OWLObjectSomeValuesFrom> owlObjectSomeValuesFroms = newClassExpressions.stream()
-                .filter(p -> p instanceof OWLObjectSomeValuesFrom)
-                .map(p -> (OWLObjectSomeValuesFrom) p)
-                .collect(Collectors.toSet());
-        if(!owlObjectSomeValuesFroms.isEmpty()){
+        Set<OWLObjectSomeValuesFrom> owlObjectSomeValuesFroms = getSomeValuesFroms(newClassExpressions);
+        if (!owlObjectSomeValuesFroms.isEmpty()) {
             return owlObjectSomeValuesFroms.stream()
                     .allMatch(p -> applyExistentialQuantification(p, nodeInfo));
         }
         return true;
     }
 
-    private boolean applyExistentialQuantification(OWLObjectSomeValuesFrom someValuesFrom, NodeInfo nodeInfo){
+    private Set<OWLObjectSomeValuesFrom> getSomeValuesFroms(Set<OWLClassExpression> newClassExpressions) {
+        return newClassExpressions.stream()
+                .filter(p -> p instanceof OWLObjectSomeValuesFrom)
+                .map(p -> (OWLObjectSomeValuesFrom) p)
+                .collect(Collectors.toSet());
+    }
+
+    private boolean applyExistentialQuantification(OWLObjectSomeValuesFrom someValuesFrom, NodeInfo nodeInfo) {
+
         OWLObjectProperty owlObjectProperty = someValuesFrom.objectPropertiesInSignature()
                 .findAny()
-                .get();
+                .orElseThrow(() -> new IllegalStateException("No object property found in someValuesFrom" + someValuesFrom));
         OWLClassExpression filler = someValuesFrom.getFiller();
         TableauxIndividual father = nodeInfo.getIndividual();
         TableauxIndividual son = tableauxIndividualFactory.getNewIndividual();
         filler.conjunctSet()
-                .filter(OWLClassExpression::isClassExpressionLiteral)
-                .forEach(son::addingLiteralCausesClash);
+                .forEach(son::addingLabelCausesClash); //ignore clash for now, if there is clash it will be found in recursive call
         OWLObjectPropertyAssertionAxiom property =
                 this.dataFactory.getOWLObjectPropertyAssertionAxiom(owlObjectProperty, father, son);
         return isClashFree(NodeInfo.builder()
@@ -95,18 +97,17 @@ public class ALCReasoner {
         );
     }
 
-    private OWLClassExpression getSonNewClassExpressions(TableauxIndividual father, TableauxIndividual son, OWLClassExpression filler){
+    private OWLClassExpression getSonNewClassExpressions(TableauxIndividual father, TableauxIndividual son, OWLClassExpression filler) {
         //todo: check quantificatore per ogni
-        if(son.isBlocked(father)){
+        if (son.isBlocked(father)) {
             return filler;
-        }else{
+        } else {
             return this.dataFactory.getOWLObjectIntersectionOf(filler, this.tBox);
         }
     }
 
 
     /**
-     *
      * @param nodeInfo
      * @param newClassExpressions
      * @return true if or is clash free
@@ -119,10 +120,9 @@ public class ALCReasoner {
                     .takeWhile(p -> !isClashFree(NodeInfo.getNewNode(nodeInfo, newClassExpressions.stream(), p, owlObjectUnionOf)))
                     .count();
             //if all operands were traversed, it means that all branches result in clash -> return false
-            return clashedOperands!=owlObjectUnionOf.operands().count();
-
+            return clashedOperands != owlObjectUnionOf.operands().count();
         }
-        return true;
+        return applyExistential(nodeInfo, newClassExpressions);
     }
 
     private Optional<OWLObjectUnionOf> getUnvisitedUnionOf(Set<OWLClassExpression> newClassExpressions, Set<OWLObjectUnionOf> alreadyVisitedUnions) {
@@ -131,7 +131,9 @@ public class ALCReasoner {
                 .filter(p -> p instanceof OWLObjectUnionOf)
                 .filter(p -> !alreadyVisitedUnions.contains(p))
                 .map(p -> (OWLObjectUnionOf) p)
+                .filter(p -> p.operands().noneMatch(newClassExpressions::contains)) //or could be already satisfied
                 .findAny();
+
     }
 
     private Stream<OWLClassExpression> applyAnd(OWLClassExpression newClassExpression, Stream<OWLClassExpression> classExpressions) {
