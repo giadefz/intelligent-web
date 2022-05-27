@@ -29,8 +29,9 @@ public class LoadAndSaveOntologyTest {
     void setUp() throws OWLOntologyCreationException, FileNotFoundException {
         this.manager = OWLManager.createOWLOntologyManager();
 //        this.ontology = loadFromFile(manager, "simpleontology.txt");
-//        this.ontology = loadFromFile(manager, "otherontology.txt");
-        this.ontology = loadFromFile(manager, "ontont.txt");
+        this.ontology = loadFromFile(manager, "otherontology.txt");
+//        this.ontology = loadFromFile(manager, "ontont.txt");
+//        this.ontology = loadFromFile(manager, "ontologyor.txt");
         this.dataFactory = ontology.getOWLOntologyManager().getOWLDataFactory();
     }
 
@@ -67,6 +68,16 @@ public class LoadAndSaveOntologyTest {
         ALCReasoner alcReasoner = new ALCReasoner(this.ontology, this.dataFactory);
         OWLClass A = this.dataFactory.getOWLClass("A");
         System.out.println(alcReasoner.isSatisfiable(A));
+    }
+
+    @Test
+    void conjunctSet() {
+        OWLClass A = this.dataFactory.getOWLClass("A");
+        OWLClass D = this.dataFactory.getOWLClass("D");
+        OWLClass C = this.dataFactory.getOWLClass("C");
+        OWLObjectIntersectionOf owlObjectIntersectionOf = this.dataFactory.getOWLObjectIntersectionOf(D, C);
+        OWLObjectIntersectionOf owlObjectIntersectionOf1 = this.dataFactory.getOWLObjectIntersectionOf(A, owlObjectIntersectionOf);
+        owlObjectIntersectionOf1.asConjunctSet();
     }
 
     private OWLOntology loadKoalaOntology(@Nonnull OWLOntologyManager manager) throws OWLOntologyCreationException {
