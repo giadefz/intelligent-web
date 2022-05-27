@@ -59,11 +59,11 @@ public class ALCReasoner {
                 .anyMatch(currentIndividual::addingLabelCausesClash);
     }
 
-    private boolean applyExistential(NodeInfo nodeInfo, Set<OWLClassExpression> newClassExpressions) {
+    private boolean applySomeValuesFrom(NodeInfo nodeInfo, Set<OWLClassExpression> newClassExpressions) {
         Set<OWLObjectSomeValuesFrom> owlObjectSomeValuesFroms = getSomeValuesFroms(newClassExpressions);
         if (!owlObjectSomeValuesFroms.isEmpty()) {
             return owlObjectSomeValuesFroms.stream()
-                    .allMatch(p -> applyExistentialQuantification(p, nodeInfo));
+                    .allMatch(p -> applyExistentialQuantification(p, nodeInfo, newClassExpressions));
         }
         return true;
     }
@@ -75,35 +75,51 @@ public class ALCReasoner {
                 .collect(Collectors.toSet());
     }
 
-    private boolean applyExistentialQuantification(OWLObjectSomeValuesFrom someValuesFrom, NodeInfo nodeInfo) {
-
-        OWLObjectProperty owlObjectProperty = someValuesFrom.objectPropertiesInSignature()
-                .findAny()
-                .orElseThrow(() -> new IllegalStateException("No object property found in someValuesFrom" + someValuesFrom));
+    private boolean applyExistentialQuantification(OWLObjectSomeValuesFrom someValuesFrom, NodeInfo nodeInfo, Set<OWLClassExpression> newClassExpressions) {
+        OWLObjectProperty owlObjectProperty = getOwlObjectProperty(someValuesFrom);
         OWLClassExpression filler = someValuesFrom.getFiller();
         TableauxIndividual father = nodeInfo.getIndividual();
         TableauxIndividual son = tableauxIndividualFactory.getNewIndividual();
-        filler.conjunctSet()
-                .forEach(son::addingLabelCausesClash); //ignore clash for now, if there is clash it will be found in recursive call
         OWLObjectPropertyAssertionAxiom property =
                 this.dataFactory.getOWLObjectPropertyAssertionAxiom(owlObjectProperty, father, son);
+        Stream<OWLClassExpression> classExpressionsInAllValuesFrom = applyAllValuesFrom(newClassExpressions, property);
+        OWLObjectIntersectionOf sonBasicClassExpressions =
+                this.dataFactory.getOWLObjectIntersectionOf(Stream.concat(classExpressionsInAllValuesFrom, filler.conjunctSet()));
+        //we add labels now because of block checking in getSonNewClassExpressions
+        sonBasicClassExpressions.conjunctSet()
+                .forEach(son::addingLabelCausesClash); //ignore clash for now, if there is clash it will be found in recursive call
         return isClashFree(NodeInfo.builder()
                 .individual(son)
                 .classExpressions(Stream.empty())
-                .newClassExpression(getSonNewClassExpressions(father, son, filler))
+                .newClassExpression(getSonNewClassExpressions(father, son, sonBasicClassExpressions))
                 .alreadyVisitedUnions(Collections.emptySet())
                 .propertyAssertionAxiom(property)
                 .build()
         );
     }
 
-    private OWLClassExpression getSonNewClassExpressions(TableauxIndividual father, TableauxIndividual son, OWLClassExpression filler) {
-        //todo: check quantificatore per ogni
+    private OWLObjectProperty getOwlObjectProperty(OWLObjectSomeValuesFrom someValuesFrom) {
+        return someValuesFrom.objectPropertiesInSignature()
+                .findAny()
+                .orElseThrow(() -> new IllegalStateException("No object property found in someValuesFrom" + someValuesFrom));
+    }
+
+    private OWLClassExpression getSonNewClassExpressions(TableauxIndividual father, TableauxIndividual son, OWLClassExpression sonBasicClassExpressions) {
         if (son.isBlocked(father)) {
-            return filler;
+            return sonBasicClassExpressions;
         } else {
-            return this.dataFactory.getOWLObjectIntersectionOf(filler, this.tBox);
+            return this.dataFactory.getOWLObjectIntersectionOf(sonBasicClassExpressions, this.tBox);
         }
+    }
+
+    private Stream<OWLClassExpression> applyAllValuesFrom(Set<OWLClassExpression> newClassExpressions, OWLObjectPropertyAssertionAxiom property) {
+        return newClassExpressions.stream()
+                .filter(p -> p instanceof OWLObjectAllValuesFrom)
+                .map(p -> (OWLObjectAllValuesFrom) p)
+                .filter(p -> p.objectPropertiesInSignature().findFirst().orElseThrow(() -> new IllegalStateException("No property found in AllValuesFrom"))
+                        .equals(property.getProperty())
+                )
+                .map(OWLObjectAllValuesFrom::getFiller);
     }
 
 
@@ -122,7 +138,7 @@ public class ALCReasoner {
             //if all operands were traversed, it means that all branches result in clash -> return false
             return clashedOperands != owlObjectUnionOf.operands().count();
         }
-        return applyExistential(nodeInfo, newClassExpressions);
+        return applySomeValuesFrom(nodeInfo, newClassExpressions);
     }
 
     private Optional<OWLObjectUnionOf> getUnvisitedUnionOf(Set<OWLClassExpression> newClassExpressions, Set<OWLObjectUnionOf> alreadyVisitedUnions) {

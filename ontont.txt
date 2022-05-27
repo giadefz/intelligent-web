@@ -12,4 +12,4 @@ ObjectProperty: P
 
 Class: A
     SubClassOf:
-        P some (D or C)
+        P only (not C)

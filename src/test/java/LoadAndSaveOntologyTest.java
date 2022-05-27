@@ -29,8 +29,8 @@ public class LoadAndSaveOntologyTest {
     void setUp() throws OWLOntologyCreationException, FileNotFoundException {
         this.manager = OWLManager.createOWLOntologyManager();
 //        this.ontology = loadFromFile(manager, "simpleontology.txt");
-        this.ontology = loadFromFile(manager, "otherontology.txt");
-//        this.ontology = loadFromFile(manager, "ontont.txt");
+//        this.ontology = loadFromFile(manager, "otherontology.txt");
+        this.ontology = loadFromFile(manager, "ontont.txt");
 //        this.ontology = loadFromFile(manager, "ontologyor.txt");
         this.dataFactory = ontology.getOWLOntologyManager().getOWLDataFactory();
     }
@@ -67,7 +67,10 @@ public class LoadAndSaveOntologyTest {
     void alcReasonerTest() {
         ALCReasoner alcReasoner = new ALCReasoner(this.ontology, this.dataFactory);
         OWLClass A = this.dataFactory.getOWLClass("A");
-        System.out.println(alcReasoner.isSatisfiable(A));
+        OWLClass D = this.dataFactory.getOWLClass("D");
+        OWLObjectProperty p = this.dataFactory.getOWLObjectProperty("P");
+        OWLObjectSomeValuesFrom owlObjectSomeValuesFrom = this.dataFactory.getOWLObjectSomeValuesFrom(p, D);
+        System.out.println(alcReasoner.isSatisfiable(this.dataFactory.getOWLObjectIntersectionOf(A, owlObjectSomeValuesFrom)));
     }
 
     @Test
