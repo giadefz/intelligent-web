@@ -10,7 +10,7 @@ public class TableauxIndividual extends OWLNamedIndividualImpl implements Clonea
     
     private final Long id;
     private final TableauxIndividual father;
-    private Set<OWLClassExpression> literals = new HashSet<>();
+    private Set<OWLClassExpression> labels = new HashSet<>();
 
     public TableauxIndividual(String name, Long id) {
         super(IRI.create(name));
@@ -24,18 +24,18 @@ public class TableauxIndividual extends OWLNamedIndividualImpl implements Clonea
         this.father = father;
     }
 
-    public TableauxIndividual(String name, Long id, TableauxIndividual father, Set<OWLClassExpression> literals) {
+    public TableauxIndividual(String name, Long id, TableauxIndividual father, Set<OWLClassExpression> labels) {
         super(IRI.create(name));
         this.id = id;
         this.father = father;
-        this.literals = literals;
+        this.labels = labels;
     }
 
-    public TableauxIndividual(String name, Long id, Set<OWLClassExpression> literals) {
+    public TableauxIndividual(String name, Long id, Set<OWLClassExpression> labels) {
         super(IRI.create(name));
         this.id = id;
         this.father = null;
-        this.literals = literals;
+        this.labels = labels;
     }
 
     public Long getId() {
@@ -48,32 +48,32 @@ public class TableauxIndividual extends OWLNamedIndividualImpl implements Clonea
 
     /**
      *
-     * @param literal: the new literal
-     * @return true if literal causes clash, false otherwise
+     * @param label: the new label
+     * @return true if label causes clash, false otherwise
      */
-    public boolean addingLiteralCausesClash(OWLClassExpression literal){
-        assert literal.isClassExpressionLiteral();
-        literals.add(literal);
-        return literals.contains(literal.getComplementNNF());
+    public boolean addingLabelCausesClash(OWLClassExpression label){
+        Set<OWLClassExpression> labelClassExpressions = label.asConjunctSet();
+        labels.addAll(labelClassExpressions);
+        return labels.contains(label.getComplementNNF());
     }
 
     @Override
     public TableauxIndividual clone() {
         try {
             TableauxIndividual clone = (TableauxIndividual) super.clone();
-            clone.literals = new HashSet<>(this.literals);
+            clone.labels = new HashSet<>(this.labels);
             return clone;
         } catch (CloneNotSupportedException e) {
             return new TableauxIndividual(this.getIRI().getIRIString(), this.getId(), this.getFather().orElse(null));
         }
     }
 
-    public Set<OWLClassExpression> getLiterals() {
-        return literals;
+    public Set<OWLClassExpression> getLabels() {
+        return labels;
     }
 
     public boolean isBlocked(TableauxIndividual father){
-        return father.getLiterals().containsAll(this.getLiterals());
+        return father.getLabels().containsAll(this.getLabels());
     }
 
 }
