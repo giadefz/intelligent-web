@@ -33,8 +33,8 @@ public class ALCReasoner {
         return dataFactory.getOWLObjectIntersectionOf(superClasses);
     }
 
-    public boolean isSatisfiable(OWLClassExpression query) {
-        OWLClassExpression nnfQuery = query.getNNF();
+    public boolean isSatisfiable(OWLClassExpression classExpression) {
+        OWLClassExpression nnfQuery = classExpression.getNNF();
         TableauxIndividual a = tableauxIndividualFactory.getNewIndividual();
         return isClashFree(NodeInfo.builder()
                 .individual(a)
@@ -58,7 +58,6 @@ public class ALCReasoner {
     private boolean isClashFound(NodeInfo nodeInfo, TableauxIndividual currentIndividual) {
         return nodeInfo.getNewClassExpression()
                 .conjunctSet()
-                .filter(OWLClassExpression::isClassExpressionLiteral)
                 .anyMatch(currentIndividual::addingLiteralCausesClash);
     }
 
