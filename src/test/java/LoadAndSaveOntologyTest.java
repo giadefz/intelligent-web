@@ -130,4 +130,37 @@ public class LoadAndSaveOntologyTest {
             + "  <owl:FunctionalProperty rdf:ID=\"isHardWorking\"><rdfs:range rdf:resource=\"http://www.w3.org/2001/XMLSchema#boolean\"/><rdfs:domain rdf:resource=\"#Person\"/><rdf:type rdf:resource=\"http://www.w3.org/2002/07/owl#DatatypeProperty\"/></owl:FunctionalProperty>\n"
             + "  <Degree rdf:ID=\"MA\"/>\n" + "</rdf:RDF>";
 
+    @Test
+    void reasonerPizza(){
+        ALCReasoner alcReasoner = new ALCReasoner(this.ontology, this.dataFactory);
+
+        OWLReasonerFactory reasonerFactory = new ReasonerFactory();
+        OWLReasoner reasoner = reasonerFactory.createReasoner(this.ontology);
+        reasoner.precomputeInferences(InferenceType.CLASS_HIERARCHY);
+
+        // Query: VeggiePizza and MeatPizza
+        // Sat: True
+        OWLClass veggiepizza = this.dataFactory.getOWLClass("VeggiePizza");
+        OWLClass meatpizza = this.dataFactory.getOWLClass("MeatPizza");
+        System.out.println(reasoner.isSatisfiable(this.dataFactory.getOWLObjectIntersectionOf(veggiepizza, meatpizza)));
+        System.out.println(alcReasoner.isSatisfiable(this.dataFactory.getOWLObjectIntersectionOf(veggiepizza, meatpizza)));
+    }
+
+    @Test
+    void reasonerEx3_4(){
+        ALCReasoner alcReasoner = new ALCReasoner(this.ontology, this.dataFactory);
+
+        OWLReasonerFactory reasonerFactory = new ReasonerFactory();
+        OWLReasoner reasoner = reasonerFactory.createReasoner(this.ontology);
+        reasoner.precomputeInferences(InferenceType.CLASS_HIERARCHY);
+
+        //query( and( ( ̃forall( p, a)), ( ̃exist( p, ( ̃a))))).
+        // Sat: False
+        OWLClass a = this.dataFactory.getOWLClass("A");
+        OWLObjectProperty p = this.dataFactory.getOWLObjectProperty("P");
+        OWLObjectComplementOf first = this.dataFactory.getOWLObjectComplementOf(this.dataFactory.getOWLObjectAllValuesFrom(p, a));
+        OWLObjectComplementOf second = this.dataFactory.getOWLObjectComplementOf(this.dataFactory.getOWLObjectSomeValuesFrom(p, this.dataFactory.getOWLObjectComplementOf(a)));
+        System.out.println(reasoner.isSatisfiable(this.dataFactory.getOWLObjectIntersectionOf(first, second)));
+        System.out.println(alcReasoner.isSatisfiable(this.dataFactory.getOWLObjectIntersectionOf(first, second)));
+    }
 }
