@@ -6,12 +6,12 @@ import java.util.stream.Stream;
 
 public class ALCReasoner {
 
-    protected final OWLOntology ontology;
-    protected final OWLDataFactory dataFactory;
-    protected final Stream<OWLAxiom> axiomsInNNF;
-    protected final OWLClass temp;
-    protected final OWLObjectIntersectionOf tBox;
-    protected final TableauxIndividualFactory tableauxIndividualFactory = TableauxIndividualFactory.getInstance();
+    private final OWLOntology ontology;
+    private final OWLDataFactory dataFactory;
+    private final Stream<OWLAxiom> axiomsInNNF;
+    private final OWLClass temp;
+    private final OWLObjectIntersectionOf tBox;
+    private final TableauxIndividualFactory tableauxIndividualFactory = TableauxIndividualFactory.getInstance();
 
     public ALCReasoner(OWLOntology ontology, OWLDataFactory dataFactory) {
         this.ontology = ontology;
@@ -44,7 +44,7 @@ public class ALCReasoner {
                 .build());
     }
 
-    public boolean isClashFree(NodeInfo nodeInfo) {
+    private boolean isClashFree(NodeInfo nodeInfo) {
         TableauxIndividual currentIndividual = nodeInfo.getIndividual();
         if (isClashFound(nodeInfo, currentIndividual)) return false;
         Set<OWLClassExpression> newClassExpressions =
