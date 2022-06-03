@@ -1,4 +1,6 @@
-import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.VCARD;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,8 +17,6 @@ import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Stream;
 
 public class LoadAndSaveOntologyTest {
 
@@ -32,6 +32,8 @@ public class LoadAndSaveOntologyTest {
 //        this.ontology = loadFromFile(manager, "otherontology.txt");
         this.ontology = loadFromFile(manager, "ontont.txt");
 //        this.ontology = loadFromFile(manager, "ontologyor.txt");
+//        this.ontology = loadFromFile(manager, "ontology.txt");
+//        this.ontology = loadKoalaOntology(manager);
         this.dataFactory = ontology.getOWLOntologyManager().getOWLDataFactory();
     }
 
@@ -93,7 +95,15 @@ public class LoadAndSaveOntologyTest {
     }
 
     @Test
-    void name() {
+    void alcQueryParserTest() {
+        ALCQueryParser alcQueryParser = new ALCQueryParser(this.ontology);
+        OWLClassExpression cl = alcQueryParser.parseClassExpression("C and D");
+        ALCReasoner alcReasoner = new ALCReasoner(this.ontology, this.dataFactory);
+        System.out.println(alcReasoner.isSatisfiable(cl));
+    }
+
+    @Test
+    void rdfTest() {
         Model model = ModelFactory.createDefaultModel();
         Resource testResource = model.createResource("http://locahost/root")
                 .addProperty(VCARD.Family, model.createResource("http://locahost/test1").addProperty(VCARD.Family, "CoC"))
