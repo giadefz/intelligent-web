@@ -86,7 +86,7 @@ public class ALCReasoner {
         OWLObjectProperty owlObjectProperty = getOwlObjectProperty(someValuesFrom);
         OWLClassExpression filler = someValuesFrom.getFiller();
         TableauxIndividual father = nodeInfo.getIndividual();
-        TableauxIndividual son = tableauxIndividualFactory.getNewIndividual();
+        TableauxIndividual son = tableauxIndividualFactory.getNewIndividual(father);
         OWLObjectPropertyAssertionAxiom property =
                 this.dataFactory.getOWLObjectPropertyAssertionAxiom(owlObjectProperty, father, son);
         Stream<OWLClassExpression> classExpressionsInAllValuesFrom = applyAllValuesFrom(newClassExpressions, property);
@@ -112,7 +112,7 @@ public class ALCReasoner {
     }
 
     private OWLClassExpression getSonNewClassExpressions(TableauxIndividual father, TableauxIndividual son, OWLClassExpression sonBasicClassExpressions) {
-        if (son.isBlocked(father) | this.tBox==null) {
+        if (son.isBlocked() | this.tBox==null) {
             return sonBasicClassExpressions;
         } else {
             return this.dataFactory.getOWLObjectIntersectionOf(sonBasicClassExpressions, this.tBox);
