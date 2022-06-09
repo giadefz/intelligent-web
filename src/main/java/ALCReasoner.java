@@ -5,11 +5,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ALCReasoner {
-
     private final OWLOntology ontology;
     private final OWLDataFactory dataFactory;
     private final Stream<OWLAxiom> axiomsInNNF;
-    //private final OWLClass temp;
     private final OWLObjectIntersectionOf tBox;
     private final TableauxIndividualFactory tableauxIndividualFactory = TableauxIndividualFactory.getInstance();
 
@@ -30,8 +28,7 @@ public class ALCReasoner {
     }
 
     private Stream<OWLAxiom> computeAxiomsInNNF() {
-        //return ontology.logicalAxioms().map(l -> l.accept(new NNFMod(dataFactory, temp)));
-        return ontology.logicalAxioms().map(l -> l.accept(new NNFMod(dataFactory,  dataFactory.getOWLThing())));
+        return ontology.logicalAxioms().map(l -> l.accept(new NNFMod(dataFactory, dataFactory.getOWLThing())));
     }
 
     private OWLObjectIntersectionOf getTBox() {
@@ -43,17 +40,24 @@ public class ALCReasoner {
     public boolean isSatisfiable(OWLClassExpression classExpression) {
         OWLClassExpression nnfQuery = classExpression.getNNF();
         TableauxIndividual a = tableauxIndividualFactory.getNewIndividual();
-        return isClashFree(NodeInfo.builder()
+        boolean isClashFree = isClashFree(NodeInfo.builder()
                 .individual(a)
                 .classExpressions(Stream.empty())
                 .newClassExpression(this.dataFactory.getOWLObjectIntersectionOf(nnfQuery, this.tBox))
                 .alreadyVisitedUnions(Collections.emptySet())
                 .build());
+        RDFBuilder.getModel().write(System.out);
+        return isClashFree;
     }
 
     private boolean isClashFree(NodeInfo nodeInfo) {
         TableauxIndividual currentIndividual = nodeInfo.getIndividual();
-        if (isClashFound(nodeInfo, currentIndividual)) return false;
+        RDFBuilder.addToRDFModel(nodeInfo);
+        if (isClashFound(nodeInfo, currentIndividual)){
+            RDFBuilder.addClash(nodeInfo);
+            System.out.println("clash");
+            return false;
+        }
         Set<OWLClassExpression> newClassExpressions =
                 applyAnd(nodeInfo.getNewClassExpression(), nodeInfo.getClassExpressions())
                         .collect(Collectors.toSet());
@@ -96,6 +100,7 @@ public class ALCReasoner {
         sonBasicClassExpressions.conjunctSet()
                 .forEach(son::addingLabelCausesClash); //ignore clash for now, if there is clash it will be found in recursive call
         return isClashFree(NodeInfo.builder()
+                .father(nodeInfo)
                 .individual(son)
                 .classExpressions(Stream.empty())
                 .newClassExpression(getSonNewClassExpressions(father, son, sonBasicClassExpressions))
