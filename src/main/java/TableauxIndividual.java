@@ -55,6 +55,7 @@ public class TableauxIndividual extends OWLNamedIndividualImpl implements Clonea
         Set<OWLClassExpression> labelClassExpressions = label.asConjunctSet();
         labels.addAll(labelClassExpressions);
         if(!label.isClassExpressionLiteral()) return false;
+        if(label.isOWLNothing()) return true;
         return labels.contains(label.getComplementNNF());
     }
 
