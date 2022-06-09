@@ -31,3 +31,4 @@ Class: A
     EquivalentTo:
             not(B and (C and D))
 
+ObjectProperty: P
