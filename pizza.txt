@@ -20,19 +20,19 @@ ObjectProperty: hasTopping
 Class: Veggie
 
     EquivalentTo:
-            Pepperoni or Sausage
+            Mushroom or Olive
 
 Class: Meat
 
     EquivalentTo:
-            Mushroom or Olive
+            Pepperoni or Sausage
 
 Class: VeggiePizza
 
     EquivalentTo:
-            Pizza and (hasTopping some (not Meat))
+            Pizza and (hasTopping only (not Meat))
 
 Class: MeatPizza
 
      EquivalentTo:
-            Pizza and (hasTopping some (not Veggie))
+            Pizza and (hasTopping only (not Veggie))

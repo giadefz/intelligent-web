@@ -10,13 +10,16 @@ import org.semanticweb.owlapi.util.BidirectionalShortFormProviderAdapter;
 import org.semanticweb.owlapi.util.ShortFormProvider;
 import org.semanticweb.owlapi.util.SimpleShortFormProvider;
 import org.semanticweb.owlapi.util.mansyntax.ManchesterOWLSyntaxParser;
+import org.semanticweb.HermiT.ReasonerFactory;
+import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
+import org.semanticweb.owlapi.reasoner.InferenceType;
+import org.semanticweb.owlapi.reasoner.OWLReasoner;
 
 import java.util.Set;
 
 public class ALCQueryParser {
 
     private final OWLOntology rootOntology;
-    private final BidirectionalShortFormProvider bidirectionalShortFormProvider;
     private final ManchesterOWLSyntaxParser manchesterOWLSyntaxParser;
 
     public ALCQueryParser(OWLOntology rootOntology) {
@@ -24,7 +27,7 @@ public class ALCQueryParser {
         OWLOntologyManager manager = rootOntology.getOWLOntologyManager();
         Set<OWLOntology> importsClosure;
         importsClosure = rootOntology.getImportsClosure();
-        bidirectionalShortFormProvider = new BidirectionalShortFormProviderAdapter(manager,
+        BidirectionalShortFormProvider bidirectionalShortFormProvider = new BidirectionalShortFormProviderAdapter(manager,
                 importsClosure, new SimpleShortFormProvider());
         this.manchesterOWLSyntaxParser = new ManchesterOWLSyntaxParserImpl(rootOntology.getOWLOntologyManager().getOntologyConfigurator(),
                 rootOntology.getOWLOntologyManager().getOWLDataFactory());
@@ -41,12 +44,23 @@ public class ALCQueryParser {
         assert args.length == 2;
         String fileName = args[0];
         String query = args[1];
+        System.out.println("QUERY: "+ query);
         ALCOntologyLoader alcOntologyLoader = new ALCOntologyLoader(fileName);
         OWLOntology owlOntology = alcOntologyLoader.loadOntology();
         ALCQueryParser alcQueryParser = new ALCQueryParser(owlOntology);
         OWLClassExpression owlQuery = alcQueryParser.parseClassExpression(query);
-        ALCReasoner alcReasoner = new ALCReasoner(owlOntology, owlOntology.getOWLOntologyManager().getOWLDataFactory());
-        System.out.println(alcReasoner.isSatisfiable(owlQuery));
-    }
 
+        // Hermit
+        OWLReasonerFactory reasonerFactory = new ReasonerFactory();
+        OWLReasoner reasoner = reasonerFactory.createReasoner(owlOntology);
+        reasoner.precomputeInferences(InferenceType.CLASS_HIERARCHY);
+        System.out.println("HERMIT SAT: " + reasoner.isSatisfiable(owlQuery));
+
+        // Our Reasoner
+        ALCReasoner alcReasoner = new ALCReasoner(owlOntology, owlOntology.getOWLOntologyManager().getOWLDataFactory());
+        System.out.println("OUR REASONER SAT: " + alcReasoner.isSatisfiable(owlQuery));
+        }
 }
+
+
+

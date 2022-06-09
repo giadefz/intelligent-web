@@ -1,0 +1,35 @@
+TBOX VUOTA:
+# Traccia giugno 2009
+"ontology1.txt" "(A1 or A2) and ((R only (A1 and A2)) or (not A1)) and (B1 or B2) and ((R some (not A1)) or (R some (not A2)))"
+SAT: true
+
+# Traccia gennaio 2017
+"ontology1.txt" "((R some (A1 and A2)) or (R some (not B1))) and (B1 or B2) and (B3 or B4) and ((R only (not A1)) or (R only (not A2)))"
+SAT: true
+
+# Traccia 02_08_18
+"ontology2.txt" "((S some (R only A)) or B) and ((S some C) or D) and (not D or not B) and ((S only (R some (not A))) or (S only (not C)))"
+SAT: true
+
+# Traccia febbraio 2017
+"ontology2.txt" "(A or B) and ((S only (R some (not A))) or (S only B)) and (not B or (R only A)) and (not A or (S some (R only A)))"
+SAT: true
+
+# Traccia luglio 2006
+"ontology2.txt" "((R only A) or (R only (not A))) and (A or B) and ((R only (S only A)) or (not B)) and (R some (not A))"
+SAT: true
+
+# Traccia giugno 2006
+"ontology2.txt" "(A or B) and (C or D) and ((R only (S only A)) or (not B)) and (R some (S only (not A)))"
+SAT: true
+
+TBOX NON VUOTA:
+"ex3_4.txt" "(not (P some A)) and (not (P only (not A)))"
+SAT: false
+
+"pizza.txt" "VeggiePizza and MeatPizza"
+SAT: true
+
+# Traccia 26 Giugno 2007
+"ontology3.txt" "B and (R only owl:Nothing)"
+SAT: false

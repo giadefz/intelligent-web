@@ -9,22 +9,29 @@ public class ALCReasoner {
     private final OWLOntology ontology;
     private final OWLDataFactory dataFactory;
     private final Stream<OWLAxiom> axiomsInNNF;
-    private final OWLClass temp;
+    //private final OWLClass temp;
     private final OWLObjectIntersectionOf tBox;
     private final TableauxIndividualFactory tableauxIndividualFactory = TableauxIndividualFactory.getInstance();
 
     public ALCReasoner(OWLOntology ontology, OWLDataFactory dataFactory) {
         this.ontology = ontology;
+        System.out.println("ONTOLOGY: " + ontology);
         this.dataFactory = dataFactory;
-        this.temp = dataFactory.getOWLClass("temp");
-        OWLDeclarationAxiom da = dataFactory.getOWLDeclarationAxiom(temp);
-        ontology.add(da);
-        this.axiomsInNNF = computeAxiomsInNNF();
-        this.tBox = getTBox();
+        //this.temp = dataFactory.getOWLClass("temp");
+        //OWLDeclarationAxiom da = dataFactory.getOWLDeclarationAxiom(temp);
+        //ontology.add(da);
+        if (this.ontology.getLogicalAxiomCount() == 0){
+            this.axiomsInNNF = null;
+            this.tBox = null;
+        }else{
+            this.axiomsInNNF = computeAxiomsInNNF();
+            this.tBox = getTBox();
+        }
     }
 
     private Stream<OWLAxiom> computeAxiomsInNNF() {
-        return ontology.logicalAxioms().map(l -> l.accept(new NNFMod(dataFactory, temp)));
+        //return ontology.logicalAxioms().map(l -> l.accept(new NNFMod(dataFactory, temp)));
+        return ontology.logicalAxioms().map(l -> l.accept(new NNFMod(dataFactory,  dataFactory.getOWLThing())));
     }
 
     private OWLObjectIntersectionOf getTBox() {
@@ -105,7 +112,7 @@ public class ALCReasoner {
     }
 
     private OWLClassExpression getSonNewClassExpressions(TableauxIndividual father, TableauxIndividual son, OWLClassExpression sonBasicClassExpressions) {
-        if (son.isBlocked(father)) {
+        if (son.isBlocked(father) | this.tBox==null) {
             return sonBasicClassExpressions;
         } else {
             return this.dataFactory.getOWLObjectIntersectionOf(sonBasicClassExpressions, this.tBox);
