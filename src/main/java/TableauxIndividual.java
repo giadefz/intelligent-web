@@ -73,8 +73,15 @@ public class TableauxIndividual extends OWLNamedIndividualImpl implements Clonea
         return labels;
     }
 
-    public boolean isBlocked(TableauxIndividual father){
-        return father.getLabels().containsAll(this.getLabels());
+    public boolean isBlocked(){
+        TableauxIndividual currentIndividual = this;
+        Optional<TableauxIndividual> currentFatherOptional = currentIndividual.getFather();
+        while (currentFatherOptional.isPresent()){
+            TableauxIndividual currentFather = currentFatherOptional.get();
+            if(father.getLabels().containsAll(currentIndividual.getLabels())) return true;
+            else currentFatherOptional = currentFather.getFather();
+        }
+        return false;
     }
 
 }
