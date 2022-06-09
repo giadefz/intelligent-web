@@ -17,7 +17,7 @@ public class ALCReasoner {
         this.ontology = ontology;
         System.out.println("ONTOLOGY: " + ontology);
         this.dataFactory = dataFactory;
-        //this.temp = dataFactory.getOWLThing();
+        //this.temp = dataFactory.getOWLClass("temp");
         //OWLDeclarationAxiom da = dataFactory.getOWLDeclarationAxiom(temp);
         //ontology.add(da);
         if (this.ontology.getLogicalAxiomCount() == 0){
@@ -30,6 +30,7 @@ public class ALCReasoner {
     }
 
     private Stream<OWLAxiom> computeAxiomsInNNF() {
+        //return ontology.logicalAxioms().map(l -> l.accept(new NNFMod(dataFactory, temp)));
         return ontology.logicalAxioms().map(l -> l.accept(new NNFMod(dataFactory,  dataFactory.getOWLThing())));
     }
 
