@@ -30,4 +30,6 @@ SAT: false
 "pizza.txt" "VeggiePizza and MeatPizza"
 SAT: true
 
-# Controlla traccia 26 Giugno 2007
+# Traccia 26 Giugno 2007
+"ontology3.txt" "B and (R only owl:Nothing)"
+SAT: false
