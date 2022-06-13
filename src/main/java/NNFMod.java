@@ -5,19 +5,17 @@ import java.util.List;
 
 public class NNFMod extends NNF {
 
-    private final OWLClass temp;
-
     /**
      * @param dataFactory dataFactory to use
      */
-    public NNFMod(OWLDataFactory dataFactory, OWLClass temp) {
+    public NNFMod(OWLDataFactory dataFactory) {
         super(dataFactory);
-        this.temp = temp;
     }
+
 
     @Override
     public OWLAxiom visit(OWLSubClassOfAxiom axiom) {
-        return df.getOWLSubClassOfAxiom(temp,
+        return df.getOWLSubClassOfAxiom(df.getOWLThing(),
                 df.getOWLObjectUnionOf(
                                 df.getOWLObjectComplementOf(axiom.getSubClass()),
                                 axiom.getSuperClass())
@@ -28,7 +26,7 @@ public class NNFMod extends NNF {
     @Override
     public OWLAxiom visit(OWLEquivalentClassesAxiom axiom) {
         List<OWLClassExpression> classExpressions = axiom.classExpressions().toList();
-        return df.getOWLSubClassOfAxiom(temp,
+        return df.getOWLSubClassOfAxiom(df.getOWLThing(),
                 df.getOWLObjectIntersectionOf(
                         df.getOWLObjectUnionOf(
                                 df.getOWLObjectComplementOf(classExpressions.get(0)),
