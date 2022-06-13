@@ -1,3 +1,8 @@
+import com.google.common.graph.Graph;
+import com.google.common.graph.GraphBuilder;
+import com.google.common.graph.MutableGraph;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.semanticweb.owlapi.model.*;
 
 import java.util.*;
@@ -11,13 +16,11 @@ public class ALCReasoner {
     private final OWLObjectIntersectionOf tBox;
     private final TableauxIndividualFactory tableauxIndividualFactory = TableauxIndividualFactory.getInstance();
 
+
     public ALCReasoner(OWLOntology ontology, OWLDataFactory dataFactory) {
         this.ontology = ontology;
         System.out.println("ONTOLOGY: " + ontology);
         this.dataFactory = dataFactory;
-        //this.temp = dataFactory.getOWLClass("temp");
-        //OWLDeclarationAxiom da = dataFactory.getOWLDeclarationAxiom(temp);
-        //ontology.add(da);
         if (this.ontology.getLogicalAxiomCount() == 0){
             this.axiomsInNNF = null;
             this.tBox = null;
@@ -28,7 +31,7 @@ public class ALCReasoner {
     }
 
     private Stream<OWLAxiom> computeAxiomsInNNF() {
-        return ontology.logicalAxioms().map(l -> l.accept(new NNFMod(dataFactory, dataFactory.getOWLThing())));
+        return ontology.logicalAxioms().map(l -> l.accept(new NNFMod(dataFactory)));
     }
 
     private OWLObjectIntersectionOf getTBox() {
@@ -55,7 +58,6 @@ public class ALCReasoner {
         RDFBuilder.addToRDFModel(nodeInfo);
         if (isClashFound(nodeInfo, currentIndividual)){
             RDFBuilder.addClash(nodeInfo);
-            System.out.println("clash");
             return false;
         }
         Set<OWLClassExpression> newClassExpressions =
@@ -103,7 +105,7 @@ public class ALCReasoner {
                 .father(nodeInfo)
                 .individual(son)
                 .classExpressions(Stream.empty())
-                .newClassExpression(getSonNewClassExpressions(father, son, sonBasicClassExpressions))
+                .newClassExpression(getSonNewClassExpressions(son, sonBasicClassExpressions))
                 .alreadyVisitedUnions(Collections.emptySet())
                 .propertyAssertionAxiom(property)
                 .build()
@@ -116,8 +118,8 @@ public class ALCReasoner {
                 .orElseThrow(() -> new IllegalStateException("No object property found in someValuesFrom" + someValuesFrom));
     }
 
-    private OWLClassExpression getSonNewClassExpressions(TableauxIndividual father, TableauxIndividual son, OWLClassExpression sonBasicClassExpressions) {
-        if (son.isBlocked() | this.tBox==null) {
+    private OWLClassExpression getSonNewClassExpressions(TableauxIndividual son, OWLClassExpression sonBasicClassExpressions) {
+        if (son.isBlocked() || this.tBox==null) {
             return sonBasicClassExpressions;
         } else {
             return this.dataFactory.getOWLObjectIntersectionOf(sonBasicClassExpressions, this.tBox);
