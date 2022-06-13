@@ -1,3 +1,10 @@
+import com.google.common.graph.GraphBuilder;
+import com.google.common.graph.Graphs;
+import com.google.common.graph.MutableGraph;
+import com.google.common.graph.Traverser;
+import com.google.common.util.concurrent.CycleDetectingLockFactory;
+import org.apache.jena.ext.com.google.common.graph.MutableValueGraph;
+import org.apache.jena.ext.com.google.common.graph.ValueGraphBuilder;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
@@ -30,8 +37,8 @@ public class LoadAndSaveOntologyTest {
         this.manager = OWLManager.createOWLOntologyManager();
 //        this.ontology = loadFromFile(manager, "simpleontology.txt");
 //        this.ontology = loadFromFile(manager, "otherontology.txt");
-        this.ontology = loadFromFile(manager, "ontont.txt");
-//        this.ontology = loadFromFile(manager, "ontologyor.txt");
+//        this.ontology = loadFromFile(manager, "ontont.txt");
+        this.ontology = loadFromFile(manager, "pizza.txt");
 //        this.ontology = loadFromFile(manager, "ontology.txt");
 //        this.ontology = loadKoalaOntology(manager);
         this.dataFactory = ontology.getOWLOntologyManager().getOWLDataFactory();
@@ -100,6 +107,16 @@ public class LoadAndSaveOntologyTest {
         OWLClassExpression cl = alcQueryParser.parseClassExpression("C and D");
         ALCReasoner alcReasoner = new ALCReasoner(this.ontology, this.dataFactory);
         System.out.println(alcReasoner.isSatisfiable(cl));
+    }
+
+    @Test
+    void lazyUnfoldingTest() {
+        LazyUnfoldingVisitor lazyUnfoldingVisitor = new LazyUnfoldingVisitor();
+        this.ontology.logicalAxioms()
+                .forEach(a -> a.accept(lazyUnfoldingVisitor));
+        OWLDependencyGraph dependencyGraph = lazyUnfoldingVisitor.getDependencyGraph();
+        dependencyGraph.prettyPrintGraph(this.dataFactory.getOWLClass("VeggiePizza"));
+
     }
 
     @Test
@@ -172,5 +189,17 @@ public class LoadAndSaveOntologyTest {
         OWLObjectComplementOf second = this.dataFactory.getOWLObjectComplementOf(this.dataFactory.getOWLObjectSomeValuesFrom(p, this.dataFactory.getOWLObjectComplementOf(a)));
         System.out.println(reasoner.isSatisfiable(this.dataFactory.getOWLObjectIntersectionOf(first, second)));
         System.out.println(alcReasoner.isSatisfiable(this.dataFactory.getOWLObjectIntersectionOf(first, second)));
+    }
+
+    @Test
+    void graph() {
+        MutableGraph<Object> graph = GraphBuilder.directed().build();
+        OWLClass a = this.dataFactory.getOWLClass("A");
+        OWLClass b = this.dataFactory.getOWLClass("B");
+        graph.addNode(a);
+        graph.addNode(b);
+        graph.putEdge(a, b);
+        Graphs.hasCycle(graph);
+
     }
 }
