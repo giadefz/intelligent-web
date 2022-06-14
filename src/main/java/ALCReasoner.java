@@ -1,7 +1,3 @@
-import com.google.common.graph.Graph;
-import com.google.common.graph.GraphBuilder;
-import com.google.common.graph.MutableGraph;
-import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.semanticweb.owlapi.model.*;
 
@@ -12,32 +8,23 @@ import java.util.stream.Stream;
 public class ALCReasoner {
     private final OWLOntology ontology;
     private final OWLDataFactory dataFactory;
-    private final Stream<OWLAxiom> axiomsInNNF;
-    private final OWLObjectIntersectionOf tBox;
     private final TableauxIndividualFactory tableauxIndividualFactory = TableauxIndividualFactory.getInstance();
+    private final OWLObjectIntersectionOf concept;
+    private final Set<OWLLogicalAxiom> unfoldableSet;
 
 
     public ALCReasoner(OWLOntology ontology, OWLDataFactory dataFactory) {
         this.ontology = ontology;
         System.out.println("ONTOLOGY: " + ontology);
         this.dataFactory = dataFactory;
-        if (this.ontology.getLogicalAxiomCount() == 0){
-            this.axiomsInNNF = null;
-            this.tBox = null;
-        }else{
-            this.axiomsInNNF = computeAxiomsInNNF();
-            this.tBox = getTBox();
-        }
+        Pair<Set<OWLLogicalAxiom>, Set<OWLLogicalAxiom>> lazyUnfolding = lazyUnfolding();
+        this.concept = extractConcept(lazyUnfolding);
+        this.unfoldableSet = lazyUnfolding.getRight();
     }
 
-    private Stream<OWLAxiom> computeAxiomsInNNF() {
-        return ontology.logicalAxioms().map(l -> l.accept(new NNFMod(dataFactory)));
-    }
-
-    private OWLObjectIntersectionOf getTBox() {
-        Stream<OWLClassExpression> superClasses = axiomsInNNF.map(a -> (OWLSubClassOfAxiom) a)
-                .map(OWLSubClassOfAxiom::getSuperClass);
-        return dataFactory.getOWLObjectIntersectionOf(superClasses);
+    private Pair<Set<OWLLogicalAxiom>, Set<OWLLogicalAxiom>> lazyUnfolding(){
+        LazyUnfolder lazyUnfolder = new LazyUnfolder(this.ontology.getLogicalAxioms(), this.ontology.getOWLOntologyManager().getOWLDataFactory());
+        return lazyUnfolder.lazyUnfolding();
     }
 
     public boolean isSatisfiable(OWLClassExpression classExpression) {
@@ -45,20 +32,36 @@ public class ALCReasoner {
         TableauxIndividual a = tableauxIndividualFactory.getNewIndividual();
         boolean isClashFree = isClashFree(NodeInfo.builder()
                 .individual(a)
-                .classExpressions(Stream.empty())
-                .newClassExpression(this.dataFactory.getOWLObjectIntersectionOf(nnfQuery, this.tBox))
+                .classExpressions(concept != null ? concept.conjunctSet() : Stream.empty())
+                .newClassExpression(nnfQuery)
                 .alreadyVisitedUnions(Collections.emptySet())
+                .checkLazyUnfoldingRule(true)
                 .build());
         RDFBuilder.getModel().write(System.out);
         return isClashFree;
     }
 
+    private OWLObjectIntersectionOf extractConcept(Pair<Set<OWLLogicalAxiom>, Set<OWLLogicalAxiom>> tgLeftTuRight) {
+        Stream<OWLClassExpression> stream = tgLeftTuRight.getLeft()
+                .stream()
+                .map(l -> l.accept(new NNFMod(this.dataFactory)))
+                .map(a -> (OWLSubClassOfAxiom) a)
+                .map(OWLSubClassOfAxiom::getSuperClass);
+        if(stream.findAny().isPresent())
+            return this.dataFactory.getOWLObjectIntersectionOf(stream);
+        else return null;
+    }
+
     private boolean isClashFree(NodeInfo nodeInfo) {
         TableauxIndividual currentIndividual = nodeInfo.getIndividual();
         RDFBuilder.addToRDFModel(nodeInfo);
-        if (isClashFound(nodeInfo, currentIndividual)){
+        if (isClashFound(nodeInfo, currentIndividual)){ //also adds labels from new class expression to individual
             RDFBuilder.addClash(nodeInfo);
             return false;
+        }
+        if(nodeInfo.isCheckLazyUnfoldingRule()){
+            if(lazyUnfoldingRulesCauseClash(currentIndividual))
+                return false;
         }
         Set<OWLClassExpression> newClassExpressions =
                 applyAnd(nodeInfo.getNewClassExpression(), nodeInfo.getClassExpressions())
@@ -66,10 +69,12 @@ public class ALCReasoner {
         return applyOr(nodeInfo, newClassExpressions);
     }
 
+    private boolean lazyUnfoldingRulesCauseClash(TableauxIndividual currentIndividual) {
+        return currentIndividual.lazyUnfoldingRulesCauseClash(unfoldableSet);
+    }
+
     private boolean isClashFound(NodeInfo nodeInfo, TableauxIndividual currentIndividual) {
-        return nodeInfo.getNewClassExpression()
-                .conjunctSet()
-                .anyMatch(currentIndividual::addingLabelCausesClash);
+        return currentIndividual.addingLabelCausesClash(nodeInfo.getNewClassExpression().conjunctSet());
     }
 
     private boolean applySomeValuesFrom(NodeInfo nodeInfo, Set<OWLClassExpression> newClassExpressions) {
@@ -101,15 +106,22 @@ public class ALCReasoner {
         //we add labels now because of block checking in getSonNewClassExpressions
         sonBasicClassExpressions.conjunctSet()
                 .forEach(son::addingLabelCausesClash); //ignore clash for now, if there is clash it will be found in recursive call
+        boolean blocked = son.isBlocked();
         return isClashFree(NodeInfo.builder()
                 .father(nodeInfo)
                 .individual(son)
-                .classExpressions(Stream.empty())
-                .newClassExpression(getSonNewClassExpressions(son, sonBasicClassExpressions))
+                .classExpressions(getSonClassExpressions(blocked))
+                .newClassExpression(getSonNewClassExpressions(son, sonBasicClassExpressions, blocked))
                 .alreadyVisitedUnions(Collections.emptySet())
                 .propertyAssertionAxiom(property)
+                .checkLazyUnfoldingRule(true)
                 .build()
         );
+    }
+
+    private Stream<OWLClassExpression> getSonClassExpressions(boolean blocked) {
+        if(!blocked || this.concept == null) return Stream.empty();
+        return this.concept.conjunctSet();
     }
 
     private OWLObjectProperty getOwlObjectProperty(OWLObjectSomeValuesFrom someValuesFrom) {
@@ -118,11 +130,11 @@ public class ALCReasoner {
                 .orElseThrow(() -> new IllegalStateException("No object property found in someValuesFrom" + someValuesFrom));
     }
 
-    private OWLClassExpression getSonNewClassExpressions(TableauxIndividual son, OWLClassExpression sonBasicClassExpressions) {
-        if (son.isBlocked() || this.tBox==null) {
+    private OWLClassExpression getSonNewClassExpressions(TableauxIndividual son, OWLClassExpression sonBasicClassExpressions, boolean blocked) {
+        if (blocked) {
             return sonBasicClassExpressions;
         } else {
-            return this.dataFactory.getOWLObjectIntersectionOf(sonBasicClassExpressions, this.tBox);
+            return this.dataFactory.getOWLObjectIntersectionOf(sonBasicClassExpressions, this.concept);
         }
     }
 

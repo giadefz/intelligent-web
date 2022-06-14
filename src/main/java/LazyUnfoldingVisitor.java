@@ -1,5 +1,3 @@
-import com.google.common.graph.GraphBuilder;
-import com.google.common.graph.MutableGraph;
 import org.semanticweb.owlapi.model.OWLAxiomVisitor;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom;
