@@ -1,10 +1,7 @@
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableGraph;
-import com.google.common.graph.Traverser;
-import com.google.common.util.concurrent.CycleDetectingLockFactory;
-import org.apache.jena.ext.com.google.common.graph.MutableValueGraph;
-import org.apache.jena.ext.com.google.common.graph.ValueGraphBuilder;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
@@ -24,6 +21,7 @@ import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Optional;
+import java.util.Set;
 
 public class LoadAndSaveOntologyTest {
 
@@ -37,8 +35,8 @@ public class LoadAndSaveOntologyTest {
         this.manager = OWLManager.createOWLOntologyManager();
 //        this.ontology = loadFromFile(manager, "simpleontology.txt");
 //        this.ontology = loadFromFile(manager, "otherontology.txt");
-//        this.ontology = loadFromFile(manager, "ontont.txt");
-        this.ontology = loadFromFile(manager, "pizza.txt");
+        this.ontology = loadFromFile(manager, "ontont.txt");
+//        this.ontology = loadFromFile(manager, "pizza.txt");
 //        this.ontology = loadFromFile(manager, "ontology.txt");
 //        this.ontology = loadKoalaOntology(manager);
         this.dataFactory = ontology.getOWLOntologyManager().getOWLDataFactory();
@@ -82,16 +80,6 @@ public class LoadAndSaveOntologyTest {
         System.out.println(alcReasoner.isSatisfiable(this.dataFactory.getOWLObjectIntersectionOf(A, owlObjectSomeValuesFrom)));
     }
 
-    @Test
-    void conjunctSet() {
-        OWLClass A = this.dataFactory.getOWLClass("A");
-        OWLClass D = this.dataFactory.getOWLClass("D");
-        OWLClass C = this.dataFactory.getOWLClass("C");
-        OWLObjectIntersectionOf owlObjectIntersectionOf = this.dataFactory.getOWLObjectIntersectionOf(D, C);
-        OWLObjectIntersectionOf owlObjectIntersectionOf1 = this.dataFactory.getOWLObjectIntersectionOf(A, owlObjectIntersectionOf);
-        owlObjectIntersectionOf1.asConjunctSet();
-    }
-
     private OWLOntology loadKoalaOntology(@Nonnull OWLOntologyManager manager) throws OWLOntologyCreationException {
         return manager.loadOntologyFromOntologyDocument(new StringDocumentSource(koala));
     }
@@ -104,19 +92,15 @@ public class LoadAndSaveOntologyTest {
     @Test
     void alcQueryParserTest() {
         ALCQueryParser alcQueryParser = new ALCQueryParser(this.ontology);
-        OWLClassExpression cl = alcQueryParser.parseClassExpression("C and D");
+        OWLClassExpression cl = alcQueryParser.parseClassExpression("C");
         ALCReasoner alcReasoner = new ALCReasoner(this.ontology, this.dataFactory);
         System.out.println(alcReasoner.isSatisfiable(cl));
     }
 
     @Test
     void lazyUnfoldingTest() {
-        LazyUnfoldingVisitor lazyUnfoldingVisitor = new LazyUnfoldingVisitor();
-        this.ontology.logicalAxioms()
-                .forEach(a -> a.accept(lazyUnfoldingVisitor));
-        OWLDependencyGraph dependencyGraph = lazyUnfoldingVisitor.getDependencyGraph();
-        dependencyGraph.prettyPrintGraph(this.dataFactory.getOWLClass("VeggiePizza"));
-
+        LazyUnfolder lazyUnfolder = new LazyUnfolder(this.ontology.getLogicalAxioms(), this.dataFactory);
+        Pair<Set<OWLLogicalAxiom>, Set<OWLLogicalAxiom>> setSetPair = lazyUnfolder.lazyUnfolding();
     }
 
     @Test
