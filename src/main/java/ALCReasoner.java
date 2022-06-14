@@ -60,8 +60,10 @@ public class ALCReasoner {
             return false;
         }
         if(nodeInfo.isCheckLazyUnfoldingRule()){
-            if(lazyUnfoldingRulesCauseClash(currentIndividual))
+            if(lazyUnfoldingRulesCauseClash(currentIndividual)){
+                RDFBuilder.addClash(nodeInfo);
                 return false;
+            }
         }
         Set<OWLClassExpression> newClassExpressions =
                 applyAnd(nodeInfo.getNewClassExpression(), nodeInfo.getClassExpressions())
