@@ -16,9 +16,11 @@ public class ALCReasoner {
 
     public ALCReasoner(OWLOntology ontology, OWLDataFactory dataFactory) {
         this.ontology = ontology;
-        System.out.println("ONTOLOGY: " + ontology);
+        System.out.println("ONTOLOGY: " + ontology.getLogicalAxioms());
         this.dataFactory = dataFactory;
         Pair<Set<OWLLogicalAxiom>, Set<OWLLogicalAxiom>> lazyUnfolding = lazyUnfolding();
+        System.out.println("LAZY UNFOLDING Tu: " + lazyUnfolding.getRight());
+        System.out.println("LAZY UNFOLDING Tg: " + lazyUnfolding.getLeft());
         this.concept = extractConcept(lazyUnfolding);
         this.unfoldableSet = lazyUnfolding.getRight();
     }
