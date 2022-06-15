@@ -10,7 +10,7 @@ import java.util.stream.StreamSupport;
 
 public class OWLDependencyGraph {
 
-    private final MutableGraph<OWLClassExpression> dependencyGraph = GraphBuilder.directed().build();
+    private final MutableGraph<OWLClassExpression> dependencyGraph = GraphBuilder.directed().allowsSelfLoops(true).build();
     private final GetLeftClassVisitor leftClassVisitor = new GetLeftClassVisitor();
 
     /**
