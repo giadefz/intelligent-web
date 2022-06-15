@@ -32,7 +32,7 @@ public class NodeInfo implements RdfSerializable{
                 .individual(oldNode.getIndividual().clone())
                 .classExpressions(newClassExpressions)
                 .newClassExpression(newClassExpression)
-                .checkLazyUnfoldingRule(false)
+                .checkLazyUnfoldingRule(true)
                 .build();
     }
 
