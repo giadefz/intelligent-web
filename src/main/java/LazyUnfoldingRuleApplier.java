@@ -26,7 +26,7 @@ public class LazyUnfoldingRuleApplier implements OWLAxiomVisitorEx<Boolean> {
 
     public boolean applyPositiveEquivalenceRuleCausesClash(OWLEquivalentClassesAxiom axiom){
         OWLClassExpression leftOperand = axiom.classExpressions().toList().get(0);
-        OWLClassExpression rightOperand = axiom.classExpressions().toList().get(1);
+        OWLClassExpression rightOperand = axiom.classExpressions().toList().get(1).getNNF();
         if(individual.getLabels().contains(leftOperand) && !individual.getLabels().containsAll(rightOperand.asConjunctSet())){
             return individual.addingLabelCausesClash(rightOperand.conjunctSet());
         }
@@ -44,7 +44,7 @@ public class LazyUnfoldingRuleApplier implements OWLAxiomVisitorEx<Boolean> {
 
     public boolean applySubClassOfRuleCausesClash(OWLSubClassOfAxiom axiom){
         OWLClassExpression subClass = axiom.getSubClass();
-        OWLClassExpression superClass = axiom.getSuperClass();
+        OWLClassExpression superClass = axiom.getSuperClass().getNNF();
         if(individual.getLabels().contains(subClass) && !individual.getLabels().containsAll(superClass.asConjunctSet())){
             return individual.addingLabelCausesClash(superClass.conjunctSet());
         }
