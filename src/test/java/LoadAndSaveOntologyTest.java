@@ -1,3 +1,5 @@
+import intelligent.web.alc.ALCQueryParser;
+import intelligent.web.alc.ALCReasoner;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

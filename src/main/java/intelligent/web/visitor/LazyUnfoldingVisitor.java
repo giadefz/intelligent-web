@@ -1,3 +1,6 @@
+package intelligent.web.visitor;
+
+import intelligent.web.alc.OWLDependencyGraph;
 import org.semanticweb.owlapi.model.OWLAxiomVisitor;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom;

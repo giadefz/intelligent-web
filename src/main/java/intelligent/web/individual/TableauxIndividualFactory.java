@@ -1,6 +1,4 @@
-import org.semanticweb.owlapi.model.OWLClassExpression;
-
-import java.util.Set;
+package intelligent.web.individual;
 
 public class TableauxIndividualFactory {
 

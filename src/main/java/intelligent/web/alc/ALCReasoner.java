@@ -1,3 +1,9 @@
+package intelligent.web.alc;
+
+import intelligent.web.individual.TableauxIndividual;
+import intelligent.web.individual.TableauxIndividualFactory;
+import intelligent.web.rdf.RDFBuilder;
+import intelligent.web.visitor.NNFMod;
 import org.apache.commons.lang3.tuple.Pair;
 import org.semanticweb.owlapi.model.*;
 

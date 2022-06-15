@@ -1,11 +1,13 @@
+package intelligent.web.alc;
+
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableGraph;
 import com.google.common.graph.Traverser;
+import intelligent.web.visitor.GetLeftClassVisitor;
 import org.semanticweb.owlapi.model.*;
 
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.StreamSupport;
 
 public class OWLDependencyGraph {

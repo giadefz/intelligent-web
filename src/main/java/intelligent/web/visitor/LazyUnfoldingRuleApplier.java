@@ -1,3 +1,7 @@
+package intelligent.web.visitor;
+
+import intelligent.web.alc.NodeInfo;
+import intelligent.web.individual.TableauxIndividual;
 import org.semanticweb.owlapi.model.*;
 
 import java.util.stream.Stream;

@@ -1,3 +1,9 @@
+package intelligent.web.alc;
+
+import intelligent.web.individual.TableauxIndividual;
+import intelligent.web.visitor.GetLeftClassVisitor;
+import intelligent.web.visitor.LazyUnfoldingRuleApplier;
+import intelligent.web.visitor.LazyUnfoldingVisitor;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.semanticweb.owlapi.model.*;

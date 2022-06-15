@@ -1,3 +1,5 @@
+package intelligent.web.individual;
+
 import org.semanticweb.owlapi.model.*;
 import uk.ac.manchester.cs.owl.owlapi.OWLNamedIndividualImpl;
 

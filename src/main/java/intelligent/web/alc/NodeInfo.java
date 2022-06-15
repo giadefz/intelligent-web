@@ -1,3 +1,7 @@
+package intelligent.web.alc;
+
+import intelligent.web.individual.TableauxIndividual;
+import intelligent.web.rdf.RdfSerializable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,7 +18,7 @@ import java.util.stream.Stream;
 @Getter
 @Setter
 @AllArgsConstructor
-public class NodeInfo implements RdfSerializable{
+public class NodeInfo implements RdfSerializable {
 
     private final NodeInfo father;
     private final TableauxIndividual individual;
