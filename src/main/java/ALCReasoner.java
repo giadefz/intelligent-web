@@ -2,6 +2,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.semanticweb.owlapi.model.*;
 
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -42,14 +43,16 @@ public class ALCReasoner {
     }
 
     private OWLObjectIntersectionOf extractConcept(Pair<Set<OWLLogicalAxiom>, Set<OWLLogicalAxiom>> tgLeftTuRight) {
-        Stream<OWLClassExpression> stream = tgLeftTuRight.getLeft()
+        Supplier<Stream<OWLClassExpression>> streamSupplier = () -> tgLeftTuRight.
+                getLeft()
                 .stream()
                 .map(l -> l.accept(new NNFMod(this.dataFactory)))
                 .map(a -> (OWLSubClassOfAxiom) a)
                 .map(OWLSubClassOfAxiom::getSuperClass);
-        if(stream.findAny().isPresent())
-            return this.dataFactory.getOWLObjectIntersectionOf(stream);
-        else return null;
+
+        if(streamSupplier.get().findAny().isPresent()) {
+            return this.dataFactory.getOWLObjectIntersectionOf(streamSupplier.get());
+        }else return null;
     }
 
     private boolean isClashFree(NodeInfo nodeInfo) {
