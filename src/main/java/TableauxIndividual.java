@@ -11,20 +11,17 @@ public class TableauxIndividual extends OWLNamedIndividualImpl implements Clonea
     private final Long id;
     private final TableauxIndividual father;
     private Set<OWLClassExpression> labels = new HashSet<>();
-    private final LazyUnfoldingRuleApplier lazyUnfoldingRuleApplier;
 
     public TableauxIndividual(String name, Long id) {
         super(IRI.create(name));
         this.father = null;
         this.id = id;
-        this.lazyUnfoldingRuleApplier = new LazyUnfoldingRuleApplier(this);
     }
 
     public TableauxIndividual(String name, Long id, TableauxIndividual father) {
         super(IRI.create(name));
         this.id = id;
         this.father = father;
-        this.lazyUnfoldingRuleApplier = new LazyUnfoldingRuleApplier(this);
     }
 
     public TableauxIndividual(String name, Long id, TableauxIndividual father, Set<OWLClassExpression> labels) {
@@ -32,7 +29,6 @@ public class TableauxIndividual extends OWLNamedIndividualImpl implements Clonea
         this.id = id;
         this.father = father;
         this.labels = labels;
-        this.lazyUnfoldingRuleApplier = new LazyUnfoldingRuleApplier(this);
     }
 
     public TableauxIndividual(String name, Long id, Set<OWLClassExpression> labels) {
@@ -40,7 +36,6 @@ public class TableauxIndividual extends OWLNamedIndividualImpl implements Clonea
         this.id = id;
         this.father = null;
         this.labels = labels;
-        this.lazyUnfoldingRuleApplier = new LazyUnfoldingRuleApplier(this);
     }
 
     public Long getId() {
@@ -91,18 +86,6 @@ public class TableauxIndividual extends OWLNamedIndividualImpl implements Clonea
             else currentFatherOptional = currentFather.getFather();
         }
         return false;
-    }
-
-    public boolean lazyUnfoldingRulesCauseClash(Set<OWLLogicalAxiom> axioms) {
-        long notClashedAxioms = axioms.stream()
-                .takeWhile(a -> !axiomCausesClash(a))
-                .count();
-
-        return notClashedAxioms != axioms.size();
-    }
-
-    private Boolean axiomCausesClash(OWLLogicalAxiom a) {
-        return a.accept(lazyUnfoldingRuleApplier);
     }
 
 }
