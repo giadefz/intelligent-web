@@ -54,7 +54,7 @@ public class ALCQueryParser {
         System.out.println("HERMIT SAT: " + reasoner.isSatisfiable(owlQuery));
 
         // Our Reasoner
-        ALCReasoner alcReasoner = new ALCReasoner(owlOntology, owlOntology.getOWLOntologyManager().getOWLDataFactory());
+        ALCReasoner alcReasoner = new ALCReasoner(owlOntology);
         System.out.println("OUR REASONER SAT: " + alcReasoner.isSatisfiable(owlQuery));
         }
 }

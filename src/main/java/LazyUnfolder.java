@@ -75,14 +75,12 @@ public class LazyUnfolder {
                 );
     }
 
-
-
     public boolean lazyUnfoldingRulesCauseClash(TableauxIndividual individual, NodeInfo nodeInfo, Set<OWLLogicalAxiom> axioms) {
         long notClashedAxioms = axioms.stream()
                 .takeWhile(a -> !axiomCausesClash(a, individual, nodeInfo))
                 .count();
 
-        return notClashedAxioms != axioms.size();
+        return notClashedAxioms != axioms.size(); //if no axioms caused clash, return true
     }
 
     private Boolean axiomCausesClash(OWLLogicalAxiom a, TableauxIndividual individual, NodeInfo nodeInfo) {

@@ -31,7 +31,8 @@ public class LoadAndSaveOntologyTest {
         this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
         ALCQueryParser alcQueryParser = new ALCQueryParser(this.ontology);
         OWLClassExpression cl = alcQueryParser.parseClassExpression("B and (R only owl:Nothing)");
-        ALCReasoner alcReasoner = new ALCReasoner(this.ontology, this.dataFactory);
+        ALCReasoner alcReasoner = new ALCReasoner(this.ontology);
+        alcReasoner.flush();
         Assertions.assertEquals(alcReasoner.isSatisfiable(cl), standardReasoner.isSatisfiable(cl));
     }
 
@@ -41,7 +42,8 @@ public class LoadAndSaveOntologyTest {
         this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
         ALCQueryParser alcQueryParser = new ALCQueryParser(this.ontology);
         OWLClassExpression cl = alcQueryParser.parseClassExpression("B and (R only owl:Nothing)");
-        ALCReasoner alcReasoner = new ALCReasoner(this.ontology, this.dataFactory);
+        ALCReasoner alcReasoner = new ALCReasoner(this.ontology);
+        alcReasoner.flush();
         Assertions.assertEquals(alcReasoner.isSatisfiable(cl), standardReasoner.isSatisfiable(cl));
     }
 
@@ -51,7 +53,8 @@ public class LoadAndSaveOntologyTest {
         this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
         ALCQueryParser alcQueryParser = new ALCQueryParser(this.ontology);
         OWLClassExpression cl = alcQueryParser.parseClassExpression("(A1 or A2) and ((R only (A1 and A2)) or (not A1)) and (B1 or B2) and ((R some (not A1)) or (R some (not A2)))");
-        ALCReasoner alcReasoner = new ALCReasoner(this.ontology, this.dataFactory);
+        ALCReasoner alcReasoner = new ALCReasoner(this.ontology);
+        alcReasoner.flush();
         Assertions.assertEquals(alcReasoner.isSatisfiable(cl), standardReasoner.isSatisfiable(cl));
     }
 
@@ -61,7 +64,8 @@ public class LoadAndSaveOntologyTest {
         this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
         ALCQueryParser alcQueryParser = new ALCQueryParser(this.ontology);
         OWLClassExpression cl = alcQueryParser.parseClassExpression("((R some (A1 and A2)) or (R some (not B1))) and (B1 or B2) and (B3 or B4) and ((R only (not A1)) or (R only (not A2)))");
-        ALCReasoner alcReasoner = new ALCReasoner(this.ontology, this.dataFactory);
+        ALCReasoner alcReasoner = new ALCReasoner(this.ontology);
+        alcReasoner.flush();
         Assertions.assertEquals(alcReasoner.isSatisfiable(cl), standardReasoner.isSatisfiable(cl));
     }
 
@@ -71,7 +75,8 @@ public class LoadAndSaveOntologyTest {
         this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
         ALCQueryParser alcQueryParser = new ALCQueryParser(this.ontology);
         OWLClassExpression cl = alcQueryParser.parseClassExpression("((S some (R only A)) or B) and ((S some C) or D) and (not D or not B) and ((S only (R some (not A))) or (S only (not C)))");
-        ALCReasoner alcReasoner = new ALCReasoner(this.ontology, this.dataFactory);
+        ALCReasoner alcReasoner = new ALCReasoner(this.ontology);
+        alcReasoner.flush();
         Assertions.assertEquals(alcReasoner.isSatisfiable(cl), standardReasoner.isSatisfiable(cl));
     }
 
@@ -81,7 +86,8 @@ public class LoadAndSaveOntologyTest {
         this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
         ALCQueryParser alcQueryParser = new ALCQueryParser(this.ontology);
         OWLClassExpression cl = alcQueryParser.parseClassExpression("(A or B) and ((S only (R some (not A))) or (S only B)) and (not B or (R only A)) and (not A or (S some (R only A)))");
-        ALCReasoner alcReasoner = new ALCReasoner(this.ontology, this.dataFactory);
+        ALCReasoner alcReasoner = new ALCReasoner(this.ontology);
+        alcReasoner.flush();
         Assertions.assertEquals(alcReasoner.isSatisfiable(cl), standardReasoner.isSatisfiable(cl));
     }
 
@@ -91,7 +97,8 @@ public class LoadAndSaveOntologyTest {
         this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
         ALCQueryParser alcQueryParser = new ALCQueryParser(this.ontology);
         OWLClassExpression cl = alcQueryParser.parseClassExpression("((R only A) or (R only (not A))) and (A or B) and ((R only (S only A)) or (not B)) and (R some (not A))");
-        ALCReasoner alcReasoner = new ALCReasoner(this.ontology, this.dataFactory);
+        ALCReasoner alcReasoner = new ALCReasoner(this.ontology);
+        alcReasoner.flush();
         Assertions.assertEquals(alcReasoner.isSatisfiable(cl), standardReasoner.isSatisfiable(cl));
     }
 
@@ -101,7 +108,8 @@ public class LoadAndSaveOntologyTest {
         this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
         ALCQueryParser alcQueryParser = new ALCQueryParser(this.ontology);
         OWLClassExpression cl = alcQueryParser.parseClassExpression("(A or B) and (C or D) and ((R only (S only A)) or (not B)) and (R some (S only (not A)))");
-        ALCReasoner alcReasoner = new ALCReasoner(this.ontology, this.dataFactory);
+        ALCReasoner alcReasoner = new ALCReasoner(this.ontology);
+        alcReasoner.flush();
         Assertions.assertEquals(alcReasoner.isSatisfiable(cl), standardReasoner.isSatisfiable(cl));
     }
 
@@ -111,7 +119,8 @@ public class LoadAndSaveOntologyTest {
         this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
         ALCQueryParser alcQueryParser = new ALCQueryParser(this.ontology);
         OWLClassExpression cl = alcQueryParser.parseClassExpression("D");
-        ALCReasoner alcReasoner = new ALCReasoner(this.ontology, this.dataFactory);
+        ALCReasoner alcReasoner = new ALCReasoner(this.ontology);
+        alcReasoner.flush();
         Assertions.assertEquals(alcReasoner.isSatisfiable(cl), standardReasoner.isSatisfiable(cl));
     }
 
@@ -121,7 +130,8 @@ public class LoadAndSaveOntologyTest {
         this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
         ALCQueryParser alcQueryParser = new ALCQueryParser(this.ontology);
         OWLClassExpression cl = alcQueryParser.parseClassExpression("not D");
-        ALCReasoner alcReasoner = new ALCReasoner(this.ontology, this.dataFactory);
+        ALCReasoner alcReasoner = new ALCReasoner(this.ontology);
+        alcReasoner.flush();
         Assertions.assertEquals(alcReasoner.isSatisfiable(cl), standardReasoner.isSatisfiable(cl));
     }
 
@@ -131,7 +141,8 @@ public class LoadAndSaveOntologyTest {
         this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
         ALCQueryParser alcQueryParser = new ALCQueryParser(this.ontology);
         OWLClassExpression cl = alcQueryParser.parseClassExpression("(not (P some A)) and (not (P only (not A)))");
-        ALCReasoner alcReasoner = new ALCReasoner(this.ontology, this.dataFactory);
+        ALCReasoner alcReasoner = new ALCReasoner(this.ontology);
+        alcReasoner.flush();
         Assertions.assertEquals(alcReasoner.isSatisfiable(cl), standardReasoner.isSatisfiable(cl));
     }
 
@@ -141,7 +152,8 @@ public class LoadAndSaveOntologyTest {
         this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
         ALCQueryParser alcQueryParser = new ALCQueryParser(this.ontology);
         OWLClassExpression cl = alcQueryParser.parseClassExpression("B and (R only owl:Nothing)");
-        ALCReasoner alcReasoner = new ALCReasoner(this.ontology, this.dataFactory);
+        ALCReasoner alcReasoner = new ALCReasoner(this.ontology);
+        alcReasoner.flush();
         Assertions.assertEquals(alcReasoner.isSatisfiable(cl), standardReasoner.isSatisfiable(cl));
     }
 
@@ -151,7 +163,8 @@ public class LoadAndSaveOntologyTest {
         this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
         ALCQueryParser alcQueryParser = new ALCQueryParser(this.ontology);
         OWLClassExpression cl = alcQueryParser.parseClassExpression("VeggiePizza and MeatPizza");
-        ALCReasoner alcReasoner = new ALCReasoner(this.ontology, this.dataFactory);
+        ALCReasoner alcReasoner = new ALCReasoner(this.ontology);
+        alcReasoner.flush();
         Assertions.assertEquals(alcReasoner.isSatisfiable(cl), standardReasoner.isSatisfiable(cl));
     }
 
