@@ -5,7 +5,7 @@ import org.apache.jena.rdf.model.Resource;
 
 public class RDFBuilder {
     private static final String DEFAULT_URI = "http://locahost/";
-    private static final Model MODEL = ModelFactory.createDefaultModel();
+    private static Model MODEL = ModelFactory.createDefaultModel();
     private static final Property CHILD = MODEL.createProperty(DEFAULT_URI + "child");
     private static final Property EXPRESSION = MODEL.createProperty(DEFAULT_URI + "expression");
     private static final Property CLASH = MODEL.createProperty(DEFAULT_URI + "clash");
@@ -37,5 +37,9 @@ public class RDFBuilder {
 
     public static Model getModel(){
         return MODEL;
+    }
+
+    public static void flush(){
+        MODEL = ModelFactory.createDefaultModel();
     }
 }

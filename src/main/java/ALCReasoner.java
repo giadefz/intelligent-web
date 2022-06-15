@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ALCReasoner {
-    private final OWLOntology ontology;
     private final OWLDataFactory dataFactory;
     private final TableauxIndividualFactory tableauxIndividualFactory = TableauxIndividualFactory.getInstance();
     private final OWLObjectIntersectionOf concept;
@@ -15,10 +14,9 @@ public class ALCReasoner {
     private final LazyUnfolder lazyUnfolder;
 
 
-    public ALCReasoner(OWLOntology ontology, OWLDataFactory dataFactory) {
-        this.ontology = ontology;
-        this.dataFactory = dataFactory;
-        this.lazyUnfolder = new LazyUnfolder(this.ontology.getLogicalAxioms(), this.ontology.getOWLOntologyManager().getOWLDataFactory());
+    public ALCReasoner(OWLOntology ontology) {
+        this.dataFactory = ontology.getOWLOntologyManager().getOWLDataFactory();
+        this.lazyUnfolder = new LazyUnfolder(ontology.getLogicalAxioms(), ontology.getOWLOntologyManager().getOWLDataFactory());
         Pair<Set<OWLLogicalAxiom>, Set<OWLLogicalAxiom>> lazyUnfolding = lazyUnfolding();
         this.concept = extractConcept(lazyUnfolding);
         this.unfoldableSet = lazyUnfolding.getRight();
@@ -60,7 +58,7 @@ public class ALCReasoner {
     private boolean isClashFree(NodeInfo nodeInfo) {
         TableauxIndividual currentIndividual = nodeInfo.getIndividual();
         RDFBuilder.addToRDFModel(nodeInfo);
-        if (isClashFound(nodeInfo, currentIndividual) || lazyUnfoldingRulesCauseClash(currentIndividual, nodeInfo)) { //also adds labels from new class expression to individual
+        if (isClashFound(nodeInfo, currentIndividual) || lazyUnfoldingRulesCauseClash(currentIndividual, nodeInfo)) {
             RDFBuilder.addClash(nodeInfo);
             return false;
         }
@@ -152,7 +150,7 @@ public class ALCReasoner {
     /**
      * @param nodeInfo
      * @param newClassExpressions
-     * @return true if or is clash free
+     * @return true if "or" is clash free
      */
     private boolean applyOr(NodeInfo nodeInfo, Set<OWLClassExpression> newClassExpressions) {
         Optional<OWLObjectUnionOf> unionOf = getUnvisitedUnionOf(newClassExpressions, nodeInfo.getAlreadyVisitedUnions());
@@ -180,6 +178,10 @@ public class ALCReasoner {
 
     private Stream<OWLClassExpression> applyAnd(OWLClassExpression newClassExpression, Stream<OWLClassExpression> classExpressions) {
         return Stream.concat(newClassExpression.conjunctSet(), classExpressions).distinct();
+    }
+
+    public void flush(){
+        RDFBuilder.flush();
     }
 
 }
