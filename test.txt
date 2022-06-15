@@ -27,9 +27,21 @@ TBOX NON VUOTA:
 "ex3_4.txt" "(not (P some A)) and (not (P only (not A)))"
 SAT: false
 
+"ex3_4.txt" "D"
+SAT: false
+
+"ex3_4.txt" "not D"
+SAT: true
+
 "pizza.txt" "VeggiePizza and MeatPizza"
 SAT: true
 
 # Traccia 26 Giugno 2007
-"ontology3.txt" "B and (R only owl:Nothing)"
+"ontology3_0.txt" "B and (R only owl:Nothing)"
+SAT: false
+
+"ontology3_1.txt" "B and (R only owl:Nothing)"
+SAT: false
+
+"ontology3_2.txt" "B and (R only owl:Nothing)"
 SAT: false
