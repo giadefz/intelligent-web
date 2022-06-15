@@ -2,7 +2,10 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.semanticweb.owlapi.model.*;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -70,6 +73,20 @@ public class LazyUnfolder {
                             }
                         }
                 );
+    }
+
+
+
+    public boolean lazyUnfoldingRulesCauseClash(TableauxIndividual individual, NodeInfo nodeInfo, Set<OWLLogicalAxiom> axioms) {
+        long notClashedAxioms = axioms.stream()
+                .takeWhile(a -> !axiomCausesClash(a, individual, nodeInfo))
+                .count();
+
+        return notClashedAxioms != axioms.size();
+    }
+
+    private Boolean axiomCausesClash(OWLLogicalAxiom a, TableauxIndividual individual, NodeInfo nodeInfo) {
+        return a.accept(new LazyUnfoldingRuleApplier(individual, nodeInfo, dataFactory));
     }
 
 
