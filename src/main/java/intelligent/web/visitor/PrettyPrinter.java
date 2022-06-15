@@ -29,7 +29,7 @@ public class PrettyPrinter implements OWLClassExpressionVisitorEx<String> {
 
     @Override
     public String visit(OWLObjectSomeValuesFrom ce) {
-        return "∃".concat(ce.getProperty().toString())
+        return "∃".concat(((OWLObjectProperty)ce.getProperty()).getIRI().getShortForm())
                 .concat(".")
                 .concat(ce.getFiller().accept(this));
     }
