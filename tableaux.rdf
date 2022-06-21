@@ -1,0 +1,23 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:j.0="http://locahost/" > 
+  <rdf:Description rdf:about="http://locahost/1473313929">
+    <j.0:clash>CLASH</j.0:clash>
+    <j.0:expression>X&lt;1&gt;: (¬A ∨ ∃R.¬A) ∧ A ∧ B ∧ ∀R.Nothing</j.0:expression>
+    <j.0:new_expression>X&lt;1&gt;: ¬A</j.0:new_expression>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://locahost/1027006452">
+    <j.0:or rdf:resource="http://locahost/757779849"/>
+    <j.0:or rdf:resource="http://locahost/1473313929"/>
+    <j.0:new_expression>X&lt;1&gt;: B ∧ ∀R.Nothing</j.0:new_expression>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://locahost/1605190078">
+    <j.0:clash>CLASH</j.0:clash>
+    <j.0:new_expression>X&lt;2&gt;: Nothing ∧ ¬A</j.0:new_expression>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://locahost/757779849">
+    <j.0:child rdf:resource="http://locahost/1605190078"/>
+    <j.0:expression>X&lt;1&gt;: (¬A ∨ ∃R.¬A) ∧ A ∧ B ∧ ∀R.Nothing</j.0:expression>
+    <j.0:new_expression>X&lt;1&gt;: ∃R.¬A</j.0:new_expression>
+  </rdf:Description>
+</rdf:RDF>

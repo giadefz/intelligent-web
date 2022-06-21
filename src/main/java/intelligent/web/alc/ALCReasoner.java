@@ -5,8 +5,13 @@ import intelligent.web.individual.TableauxIndividualFactory;
 import intelligent.web.rdf.RDFBuilder;
 import intelligent.web.visitor.NNFMod;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.rdf.api.RDF;
+import org.apache.jena.graph.Graph;
+import org.apache.jena.rdf.model.Model;
 import org.semanticweb.owlapi.model.*;
 
+import javax.print.DocFlavor;
+import java.io.StringWriter;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -38,13 +43,20 @@ public class ALCReasoner {
     public boolean isSatisfiable(OWLClassExpression classExpression) {
         OWLClassExpression nnfQuery = classExpression.getNNF();
         TableauxIndividual a = tableauxIndividualFactory.getNewIndividual();
-        boolean isClashFree = isClashFree(NodeInfo.builder()
+        final NodeInfo nodeInfo = NodeInfo.builder()
                 .individual(a)
                 .classExpressions(concept != null ? concept.conjunctSet() : Stream.empty())
                 .newClassExpression(nnfQuery)
                 .alreadyVisitedUnions(Collections.emptySet())
-                .build());
-        RDFBuilder.getModel().write(System.out);
+                .build();
+        RDFBuilder.addToRDFModel(nodeInfo);
+        boolean isClashFree = isClashFree(nodeInfo);
+        RDFBuilder.writeTableauxAsString();
+        try {
+            RDFBuilder.createTableauxImage();
+        }catch(Exception e){
+            System.out.println("boom!");
+        }
         return isClashFree;
     }
 
@@ -63,7 +75,6 @@ public class ALCReasoner {
 
     private boolean isClashFree(NodeInfo nodeInfo) {
         TableauxIndividual currentIndividual = nodeInfo.getIndividual();
-        RDFBuilder.addToRDFModel(nodeInfo);
         if (isClashFound(nodeInfo, currentIndividual) || lazyUnfoldingRulesCauseClash(currentIndividual, nodeInfo)) {
             RDFBuilder.addClash(nodeInfo);
             return false;
@@ -112,15 +123,16 @@ public class ALCReasoner {
         sonBasicClassExpressions.conjunctSet()
                 .forEach(son::addingLabelCausesClash); //ignore clash for now, if there is clash it will be found in recursive call
         boolean isSonBlocked = son.isBlocked();
-        return isClashFree(NodeInfo.builder()
+        final NodeInfo newNodeInfo = NodeInfo.builder()
                 .father(nodeInfo)
                 .individual(son)
                 .classExpressions(getSonClassExpressions(isSonBlocked))
                 .newClassExpression(getSonNewClassExpressions(sonBasicClassExpressions, isSonBlocked))
                 .alreadyVisitedUnions(Collections.emptySet())
                 .propertyAssertionAxiom(property)
-                .build()
-        );
+                .build();
+        RDFBuilder.addToRDFModel(newNodeInfo);
+        return isClashFree(newNodeInfo);
     }
 
     private Stream<OWLClassExpression> getSonClassExpressions(boolean blocked) {
@@ -163,12 +175,17 @@ public class ALCReasoner {
         if (unionOf.isPresent()) {
             OWLObjectUnionOf owlObjectUnionOf = unionOf.get();
             long clashedOperands = owlObjectUnionOf.operands()
-                    .takeWhile(p -> !isClashFree(NodeInfo.getNewNode(nodeInfo, newClassExpressions.stream(), p, owlObjectUnionOf)))
+                    .takeWhile(p -> !addNodeToTableauxAndCheckIfClashFree(NodeInfo.getNewNode(nodeInfo, newClassExpressions.stream(), p, owlObjectUnionOf)))
                     .count();
             //if all operands were traversed, it means that all branches result in clash -> return false
             return clashedOperands != owlObjectUnionOf.operands().count();
         }
         return applySomeValuesFrom(nodeInfo, newClassExpressions);
+    }
+
+    private boolean addNodeToTableauxAndCheckIfClashFree(NodeInfo nodeInfo){
+        RDFBuilder.addOr(nodeInfo);
+        return isClashFree(nodeInfo);
     }
 
     private Optional<OWLObjectUnionOf> getUnvisitedUnionOf(Set<OWLClassExpression> newClassExpressions, Set<OWLObjectUnionOf> alreadyVisitedUnions) {

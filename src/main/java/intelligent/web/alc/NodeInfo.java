@@ -22,7 +22,7 @@ public class NodeInfo implements RdfSerializable {
 
     private final NodeInfo father;
     private final TableauxIndividual individual;
-    private final Stream<OWLClassExpression> classExpressions;
+    private Stream<OWLClassExpression> classExpressions;
     private final Set<OWLObjectUnionOf> alreadyVisitedUnions;
     private OWLClassExpression newClassExpression;
     private final OWLObjectPropertyAssertionAxiom propertyAssertionAxiom;
