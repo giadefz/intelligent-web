@@ -59,7 +59,7 @@ public class RDFBuilder {
         resource.addProperty(NEW_EXPRESSION, "X" + nodeInfo.getIndividual() + ": " + PrettyPrinter.printOwlExpression(nodeInfo.getNewClassExpression()));
         if(!classExpressions.isEmpty()) {
             final List<String> collect = classExpressions.stream().map(PrettyPrinter::printOwlExpression).toList();
-            classExp = StringUtils.join(collect, " ∧ ");
+            classExp = StringUtils.join(collect, ", ");
             resource.addProperty(EXPRESSION, "X" + nodeInfo.getIndividual() + ": " + classExp);
         }
 

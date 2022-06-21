@@ -11,7 +11,7 @@ public class PrettyPrinter implements OWLClassExpressionVisitorEx<String> {
     public String visit(OWLObjectIntersectionOf ce) {
         List<String> collect = ce.operands()
                 .map(o -> o.accept(this)).toList();
-        return StringUtils.join(collect, " ∧ ");
+        return StringUtils.join(collect, ", ");
     }
 
     @Override
