@@ -14,8 +14,11 @@ import javax.print.DocFlavor;
 import java.io.StringWriter;
 import java.util.*;
 import java.util.function.Supplier;
+import org.slf4j.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static org.slf4j.LoggerFactory.getLogger;
 
 public class ALCReasoner {
     private final OWLDataFactory dataFactory;
@@ -23,6 +26,7 @@ public class ALCReasoner {
     private final OWLObjectIntersectionOf concept;
     private final Set<OWLLogicalAxiom> unfoldableSet;
     private final LazyUnfolder lazyUnfolder;
+    private final Logger LOGGER = getLogger(this.getClass());
 
 
     public ALCReasoner(OWLOntology ontology) {
@@ -41,6 +45,7 @@ public class ALCReasoner {
     }
 
     public boolean isSatisfiable(OWLClassExpression classExpression) {
+        long startTime = System.nanoTime();
         OWLClassExpression nnfQuery = classExpression.getNNF();
         TableauxIndividual a = tableauxIndividualFactory.getNewIndividual();
         final NodeInfo nodeInfo = NodeInfo.builder()
@@ -51,12 +56,22 @@ public class ALCReasoner {
                 .build();
         RDFBuilder.addToRDFModel(nodeInfo);
         boolean isClashFree = isClashFree(nodeInfo);
+        long endTime = System.nanoTime();
+        long totalIsClashFreeExecution = (endTime - startTime)/1000000;
+        LOGGER.info("isSatisfiable execution time: " + totalIsClashFreeExecution + "ms");
+        long rdfCreationStartTime = System.nanoTime();
         RDFBuilder.writeTableauxAsString();
         try {
             RDFBuilder.createTableauxImage();
         }catch(Exception e){
             System.out.println("boom!");
         }
+        long rdfCreationEndTime = System.nanoTime();
+        long totalRdfCreationExecutionTime = (rdfCreationEndTime - rdfCreationStartTime)/1000000;
+        LOGGER.info("RDFTableauxCreation execution time: " + totalRdfCreationExecutionTime + "ms");
+        RDFBuilder.flush();
+        long totalExecutionTime=totalIsClashFreeExecution + totalRdfCreationExecutionTime;
+        LOGGER.info("Total execution time: " + totalExecutionTime + "ms");
         return isClashFree;
     }
 
