@@ -3,6 +3,7 @@ from rdflib import Graph
 import io
 import pydotplus
 from IPython.display import display, Image
+import datetime
 
 def rdfToPng():
     g = Graph()
@@ -10,7 +11,8 @@ def rdfToPng():
     stream = io.StringIO()
     rdf2dot(g, stream, opts={display})
     pydot_graph = pydotplus.graph_from_dot_data(stream.getvalue())
-    pydot_graph.write_png("tableaux.png")
+    suffix = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
+    pydot_graph.write_png("tableaux_images/tableaux_" + suffix + ".png")
 
 if __name__ == '__main__':
     rdfToPng()
