@@ -19,14 +19,16 @@ public class TableauxIndividualFactory {
 
     public TableauxIndividual getNewIndividual(){
         this.maxId++;
-        //TODO: GENERATE NAME
         return new TableauxIndividual(maxId.toString(), maxId);
     }
 
     public TableauxIndividual getNewIndividual(TableauxIndividual father){
         this.maxId++;
-        //TODO: GENERATE NAME
         return new TableauxIndividual(maxId.toString(), maxId, father);
+    }
+
+    public void flush(){
+        this.maxId = 0L;
     }
 
 }

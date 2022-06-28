@@ -90,7 +90,7 @@ public class RDFBuilder {
         writer.write(tableaux);
         writer.close();
         String fileName = new SimpleDateFormat("yyyyMMddHHmm'.png'").format(new Date());
-        Process process = Runtime.getRuntime().exec("python rdfToPng.py");
+        Process process = Runtime.getRuntime().exec("python3 rdfToPng.py");
         return fileName;
     }
 

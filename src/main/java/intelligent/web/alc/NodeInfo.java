@@ -18,7 +18,7 @@ import java.util.stream.Stream;
 @Getter
 @Setter
 @AllArgsConstructor
-public class NodeInfo implements RdfSerializable {
+public class NodeInfo {
 
     private final NodeInfo father;
     private final TableauxIndividual individual;
@@ -38,10 +38,5 @@ public class NodeInfo implements RdfSerializable {
                 .classExpressions(newClassExpressions)
                 .newClassExpression(newClassExpression)
                 .build();
-    }
-
-    @Override
-    public String toRdf() {
-        return null;
     }
 }

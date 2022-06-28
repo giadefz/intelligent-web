@@ -5,14 +5,11 @@ import intelligent.web.individual.TableauxIndividualFactory;
 import intelligent.web.rdf.RDFBuilder;
 import intelligent.web.visitor.NNFMod;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.rdf.api.RDF;
-import org.apache.jena.graph.Graph;
-import org.apache.jena.rdf.model.Model;
 import org.semanticweb.owlapi.model.*;
 
-import javax.print.DocFlavor;
-import java.io.StringWriter;
-import java.util.*;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import java.util.stream.Collectors;
@@ -35,9 +32,9 @@ public class ALCReasoner {
         Pair<Set<OWLLogicalAxiom>, Set<OWLLogicalAxiom>> lazyUnfolding = lazyUnfolding();
         this.concept = extractConcept(lazyUnfolding);
         this.unfoldableSet = lazyUnfolding.getRight();
-        System.out.println("ONTOLOGY: " + ontology.getLogicalAxioms());
-        System.out.println("LAZY UNFOLDING Tu: " + lazyUnfolding.getRight());
-        System.out.println("LAZY UNFOLDING Tg: " + lazyUnfolding.getLeft());
+        LOGGER.info("ONTOLOGY: " + ontology.getLogicalAxioms());
+        LOGGER.info("LAZY UNFOLDING Tu: " + lazyUnfolding.getRight());
+        LOGGER.info("LAZY UNFOLDING Tg: " + lazyUnfolding.getLeft());
     }
 
     private Pair<Set<OWLLogicalAxiom>, Set<OWLLogicalAxiom>> lazyUnfolding() {
@@ -63,14 +60,16 @@ public class ALCReasoner {
         try {
             RDFBuilder.createTableauxImage();
         }catch(Exception e){
-            System.out.println("boom!");
+            System.out.println("Error creating tableaux image!");
         }
         long rdfCreationEndTime = System.nanoTime();
         long totalRdfCreationExecutionTime = (rdfCreationEndTime - rdfCreationStartTime)/1000000;
         LOGGER.info("RDFTableauxCreation execution time: " + totalRdfCreationExecutionTime + "ms");
         RDFBuilder.flush();
+        tableauxIndividualFactory.flush();
         long totalExecutionTime=totalIsClashFreeExecution + totalRdfCreationExecutionTime;
         LOGGER.info("Total execution time: " + totalExecutionTime + "ms");
+        LOGGER.info("Is Satisfiable: " + isClashFree);
         return isClashFree;
     }
 
