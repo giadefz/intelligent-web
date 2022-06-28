@@ -54,7 +54,6 @@ public class ALCReasoner {
                 .newClassExpression(nnfQuery)
                 .alreadyVisitedUnions(Collections.emptySet())
                 .build();
-        RDFBuilder.addToRDFModel(nodeInfo);
         boolean isClashFree = isClashFree(nodeInfo);
         long endTime = System.nanoTime();
         long totalIsClashFreeExecution = (endTime - startTime)/1000000;
@@ -94,6 +93,8 @@ public class ALCReasoner {
             RDFBuilder.addClash(nodeInfo);
             return false;
         }
+
+        RDFBuilder.addToRDFModel(nodeInfo);
         Set<OWLClassExpression> newClassExpressions =
                 applyAnd(nodeInfo.getNewClassExpression(), nodeInfo.getClassExpressions())
                         .collect(Collectors.toSet());
@@ -146,7 +147,6 @@ public class ALCReasoner {
                 .alreadyVisitedUnions(Collections.emptySet())
                 .propertyAssertionAxiom(property)
                 .build();
-        RDFBuilder.addToRDFModel(newNodeInfo);
         return isClashFree(newNodeInfo);
     }
 

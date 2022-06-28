@@ -44,7 +44,8 @@ public class RDFBuilder {
     
     private static void addChildToFather(NodeInfo nodeInfo){
         Resource father = MODEL.getResource(DEFAULT_URI+ nodeInfo.getFather().hashCode());
-        father.addProperty(CHILD, addExpressionToResource(createNewResource(nodeInfo), nodeInfo));
+        if(!addedNodes.contains(nodeInfo.hashCode()))
+            father.addProperty(CHILD, addExpressionToResource(createNewResource(nodeInfo), nodeInfo));
     }
     
     private static Resource createNewResource(NodeInfo nodeInfo){
