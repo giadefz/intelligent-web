@@ -149,7 +149,7 @@ public class ALCReasoner {
     }
 
     private Stream<OWLClassExpression> getSonClassExpressions(boolean blocked) {
-        if (!blocked || this.concept == null) return Stream.empty();
+        if (blocked || this.concept == null) return Stream.empty();
         return this.concept.conjunctSet();
     }
 
