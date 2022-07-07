@@ -43,7 +43,7 @@ public class LazyUnfoldingRuleApplier implements OWLAxiomVisitorEx<Boolean> {
         return checkClashAndAddLabels(leftOperand, rightOperand);
     }
 
-    public boolean applySubClassOfRuleCausesClash(OWLSubClassOfAxiom axiom) {
+    private boolean applySubClassOfRuleCausesClash(OWLSubClassOfAxiom axiom) {
         OWLClassExpression subClass = axiom.getSubClass();
         OWLClassExpression superClass = axiom.getSuperClass().getNNF();
         return checkClashAndAddLabels(subClass, superClass);

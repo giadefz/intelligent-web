@@ -19,7 +19,7 @@ public class OWLDependencyGraph {
      *
      * @param firstNode the tail of the edge
      * @param secondNode the head of the edge
-     * @return if the dependency graph was modified as a result of this call
+     * @return true if the dependency graph was modified as a result of this call
      */
     public boolean addDependencyToGraph(OWLClassExpression firstNode, OWLClassExpression secondNode){
         dependencyGraph.addNode(secondNode);
@@ -27,26 +27,21 @@ public class OWLDependencyGraph {
         return dependencyGraph.putEdge(firstNode, secondNode);
     }
 
-    public void prettyPrintGraph(OWLClassExpression root){
-        Iterable<OWLClassExpression> traverser = Traverser.forGraph(dependencyGraph).breadthFirst(root);
-
-        StreamSupport.stream(traverser.spliterator(), false)
-                .map(c -> c.toString() + "->")
-                .forEach(System.out::println);
-
-    }
-
     public boolean isClassUnfoldable(OWLClassExpression classExpression, Set<OWLLogicalAxiom> unfoldableAxioms){
-        boolean classAlreadyPresent = unfoldableAxioms.stream()
-                .filter(this::isSubClassOfOrEquivalent)
-                .map(a -> a.accept(leftClassVisitor))
-                .anyMatch(c -> c.equals(classExpression));
-        if(classAlreadyPresent) return false;
-        Iterable<OWLClassExpression> traverser = Traverser.forGraph(dependencyGraph).breadthFirst(classExpression);
-        MutableGraph<OWLClassExpression> subgraph = Graphs.inducedSubgraph(dependencyGraph, traverser);
+        if(isClassAlreadyPresent(classExpression, unfoldableAxioms))
+            return false;
+        Iterable<OWLClassExpression> traversedNodesFromClassExpression =
+                Traverser.forGraph(dependencyGraph).breadthFirst(classExpression);
+        MutableGraph<OWLClassExpression> subgraph = Graphs.inducedSubgraph(dependencyGraph, traversedNodesFromClassExpression);
         return !Graphs.hasCycle(subgraph);
     }
 
+    private boolean isClassAlreadyPresent(OWLClassExpression classExpression, Set<OWLLogicalAxiom> unfoldableAxioms) {
+        return unfoldableAxioms.stream()
+                .filter(this::isSubClassOfOrEquivalent)
+                .map(a -> a.accept(leftClassVisitor))
+                .anyMatch(c -> c.equals(classExpression));
+    }
 
 
     private boolean isSubClassOfOrEquivalent(OWLAxiom axiom) {

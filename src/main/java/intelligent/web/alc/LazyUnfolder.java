@@ -29,18 +29,23 @@ public class LazyUnfolder {
 
     public Pair<Set<OWLLogicalAxiom>, Set<OWLLogicalAxiom>> lazyUnfolding() {
         normalizeAxioms();
+        //build the dependency graph
         LazyUnfoldingVisitor lazyUnfoldingVisitor = new LazyUnfoldingVisitor();
         logicalAxioms.forEach(a -> a.accept(lazyUnfoldingVisitor));
         OWLDependencyGraph dependencyGraph = lazyUnfoldingVisitor.getDependencyGraph();
 
-        checkLazyUnfolding(logicalAxioms, dependencyGraph, OWLEquivalentClassesAxiom.class);
-        checkLazyUnfolding(logicalAxioms, dependencyGraph, OWLSubClassOfAxiom.class);
+        checkLazyUnfolding(dependencyGraph, OWLEquivalentClassesAxiom.class);
+        checkLazyUnfolding(dependencyGraph, OWLSubClassOfAxiom.class);
 
         logicalAxioms.removeAll(unfoldableAxioms);
 
         return new ImmutablePair<>(logicalAxioms, unfoldableAxioms);
     }
 
+    /**
+     * transforms multiple subClassOfAxioms with same left operand into a single subClassOfAxiom with all right
+     * operands found put in "and"
+     */
     private void normalizeAxioms(){
         Set<OWLLogicalAxiom> allSubClassesOf = logicalAxioms.stream()
                 .filter(a -> a instanceof OWLSubClassOfAxiom)
@@ -68,7 +73,7 @@ public class LazyUnfolder {
         );
     }
 
-    private void checkLazyUnfolding(Set<OWLLogicalAxiom> logicalAxioms, OWLDependencyGraph dependencyGraph,
+    private void checkLazyUnfolding(OWLDependencyGraph dependencyGraph,
                                     Class<? extends OWLLogicalAxiom> axiomClass) {
         logicalAxioms.stream()
                 .filter(a -> axiomClass.isAssignableFrom(a.getClass()))
