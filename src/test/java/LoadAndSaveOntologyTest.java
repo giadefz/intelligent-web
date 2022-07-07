@@ -52,7 +52,7 @@ public class LoadAndSaveOntologyTest {
 
     }
 
-    @Test //BLOCKING E SODDISFACIBILE
+    @Test //BLOCKING E SODDISFACIBILE, TBOX VUOTA
     void ontology1Test1() throws OWLOntologyCreationException {
         this.ontology = loadFromFile(this.manager, "ontology1.txt");
         this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
@@ -62,7 +62,7 @@ public class LoadAndSaveOntologyTest {
         calculateHermitTimeAndAssertEquals(cl, alcReasoner);
     }
 
-    @Test //SODDISFACIBILE
+    @Test //SODDISFACIBILE, TBOX VUOTA
     void ontology1Test2() throws OWLOntologyCreationException {
         this.ontology = loadFromFile(this.manager, "ontology1.txt");
         this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
@@ -92,7 +92,7 @@ public class LoadAndSaveOntologyTest {
         calculateHermitTimeAndAssertEquals(cl, alcReasoner);
     }
 
-    @Test
+    @Test //SODDISFACIBILE, TBOX VUOTA
     void ontology2Test3() throws OWLOntologyCreationException {
         this.ontology = loadFromFile(this.manager, "ontology2.txt");
         this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
@@ -102,7 +102,7 @@ public class LoadAndSaveOntologyTest {
         calculateHermitTimeAndAssertEquals(cl, alcReasoner);
     }
 
-    @Test
+    @Test //SODDISFACIBILE, TBOX VUOTA
     void ontology2Test4() throws OWLOntologyCreationException {
         this.ontology = loadFromFile(this.manager, "ontology2.txt");
         this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
@@ -112,7 +112,7 @@ public class LoadAndSaveOntologyTest {
         calculateHermitTimeAndAssertEquals(cl, alcReasoner);
     }
 
-    @Test
+    @Test //VA IN CONTRADDIZIONE LA QUERY APPLICANDO LAZY UNFOLDING
     void ex3_4Test1() throws OWLOntologyCreationException {
         this.ontology = loadFromFile(this.manager, "ex3_4.txt");
         this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
@@ -122,7 +122,7 @@ public class LoadAndSaveOntologyTest {
         calculateHermitTimeAndAssertEquals(cl, alcReasoner);
     }
 
-    @Test
+    @Test //QUI CON IL NOT D NON VA IN CONTRADDIZIONE
     void ex3_4Test3() throws OWLOntologyCreationException {
         this.ontology = loadFromFile(this.manager, "ex3_4.txt");
         this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
@@ -132,7 +132,7 @@ public class LoadAndSaveOntologyTest {
         calculateHermitTimeAndAssertEquals(cl, alcReasoner);
     }
 
-    @Test
+    @Test //NON SODDISFACIBILE GENERA FIGLIO CHE VA IMMEDIATAMENTE IN CLASH
     void ex3_4Test2() throws OWLOntologyCreationException {
         this.ontology = loadFromFile(this.manager, "ex3_4.txt");
         this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
@@ -142,7 +142,7 @@ public class LoadAndSaveOntologyTest {
         calculateHermitTimeAndAssertEquals(cl, alcReasoner);
     }
 
-    @Test
+    @Test //TU VUOTO, FIGLIO NON BLOCCATO VA IMMEDIATAMENTE IN CLASH, NON SODDISFACIBILE
     void ontology3_2Test() throws OWLOntologyCreationException {
         this.ontology = loadFromFile(this.manager, "ontology3_2.txt");
         this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
@@ -152,7 +152,7 @@ public class LoadAndSaveOntologyTest {
         calculateHermitTimeAndAssertEquals(cl, alcReasoner);
     }
 
-    @Test
+    @Test //IMMEDIATAMENTE SODDISFACIBILE DOPO APPLICAZIONE LAZY UNFOLDING
     void pizzaTest() throws OWLOntologyCreationException {
         this.ontology = loadFromFile(this.manager, "pizza.txt");
         this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
