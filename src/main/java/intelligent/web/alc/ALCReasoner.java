@@ -74,15 +74,14 @@ public class ALCReasoner {
     }
 
     private OWLObjectIntersectionOf extractConcept(Pair<Set<OWLLogicalAxiom>, Set<OWLLogicalAxiom>> tgLeftTuRight) {
-        Supplier<Stream<OWLClassExpression>> streamSupplier = () -> tgLeftTuRight.
-                getLeft()
+        Set<OWLClassExpression> conceptSet = tgLeftTuRight.getLeft()
                 .stream()
                 .map(l -> l.accept(new NNFMod(this.dataFactory)))
                 .map(a -> (OWLSubClassOfAxiom) a)
-                .map(OWLSubClassOfAxiom::getSuperClass);
-
-        if (streamSupplier.get().findAny().isPresent()) {
-            return this.dataFactory.getOWLObjectIntersectionOf(streamSupplier.get());
+                .map(OWLSubClassOfAxiom::getSuperClass)
+                .collect(Collectors.toSet());
+        if (!conceptSet.isEmpty()) {
+            return this.dataFactory.getOWLObjectIntersectionOf(conceptSet);
         } else return null;
     }
 
