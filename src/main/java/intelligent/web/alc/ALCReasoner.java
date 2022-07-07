@@ -3,6 +3,7 @@ package intelligent.web.alc;
 import intelligent.web.individual.TableauxIndividual;
 import intelligent.web.individual.TableauxIndividualFactory;
 import intelligent.web.rdf.RDFBuilder;
+import intelligent.web.visitor.AxiomPrettyPrinter;
 import intelligent.web.visitor.NNFMod;
 import org.apache.commons.lang3.tuple.Pair;
 import org.semanticweb.owlapi.model.*;
@@ -10,7 +11,7 @@ import org.semanticweb.owlapi.model.*;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
+
 import org.slf4j.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -32,9 +33,10 @@ public class ALCReasoner {
         Pair<Set<OWLLogicalAxiom>, Set<OWLLogicalAxiom>> lazyUnfolding = lazyUnfolding();
         this.concept = extractConcept(lazyUnfolding);
         this.unfoldableSet = lazyUnfolding.getRight();
-        LOGGER.info("ONTOLOGY: " + ontology.getLogicalAxioms());
-        LOGGER.info("LAZY UNFOLDING Tu: " + lazyUnfolding.getRight());
-        LOGGER.info("LAZY UNFOLDING Tg: " + lazyUnfolding.getLeft());
+        AxiomPrettyPrinter axiomPrettyPrinter = new AxiomPrettyPrinter();
+        LOGGER.info("ONTOLOGY: " + ontology.logicalAxioms().map(axiom -> axiom.accept(axiomPrettyPrinter)).collect(Collectors.toSet()));
+        LOGGER.info("LAZY UNFOLDING Tu: " + lazyUnfolding.getRight().stream().map(axiom -> axiom.accept(axiomPrettyPrinter)).collect(Collectors.toSet()));
+        LOGGER.info("LAZY UNFOLDING Tg: " + lazyUnfolding.getLeft().stream().map(axiom -> axiom.accept(axiomPrettyPrinter)).collect(Collectors.toSet()));
     }
 
     private Pair<Set<OWLLogicalAxiom>, Set<OWLLogicalAxiom>> lazyUnfolding() {
@@ -188,6 +190,7 @@ public class ALCReasoner {
         if (unionOf.isPresent()) {
             OWLObjectUnionOf owlObjectUnionOf = unionOf.get();
             long clashedOperands = owlObjectUnionOf.operands()
+                    .unordered()
                     .takeWhile(p -> !addNodeToTableauxAndCheckIfClashFree(NodeInfo.getNewNode(nodeInfo, newClassExpressions.stream(), p, owlObjectUnionOf)))
                     .count();
             //if all operands were traversed, it means that all branches result in clash -> return false

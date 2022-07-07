@@ -31,7 +31,7 @@ public class LoadAndSaveOntologyTest {
         this.manager = OWLManager.createOWLOntologyManager();
         this.reasonerFactory = new ReasonerFactory();
     }
-    @Test //NON SODDISFACIBILE
+    @Test //NON SODDISFACIBILE, TU E TG ENTRAMBI NON VUOTI
     void ontology3_0Test() throws OWLOntologyCreationException {
         this.ontology = loadFromFile(this.manager, "ontology3_0.txt");
         this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
@@ -148,6 +148,16 @@ public class LoadAndSaveOntologyTest {
         this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
         ALCQueryParser alcQueryParser = new ALCQueryParser(this.ontology);
         OWLClassExpression cl = alcQueryParser.parseClassExpression("B and (R only owl:Nothing)");
+        ALCReasoner alcReasoner = new ALCReasoner(this.ontology);
+        calculateHermitTimeAndAssertEquals(cl, alcReasoner);
+    }
+
+    @Test //BLOCKING
+    void ontology4Test() throws OWLOntologyCreationException {
+        this.ontology = loadFromFile(this.manager, "ontology4.txt");
+        this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
+        ALCQueryParser alcQueryParser = new ALCQueryParser(this.ontology);
+        OWLClassExpression cl = alcQueryParser.parseClassExpression("C");
         ALCReasoner alcReasoner = new ALCReasoner(this.ontology);
         calculateHermitTimeAndAssertEquals(cl, alcReasoner);
     }
