@@ -162,6 +162,16 @@ public class LoadAndSaveOntologyTest {
         calculateHermitTimeAndAssertEquals(cl, alcReasoner);
     }
 
+    @Test //BLOCKING CON ESPANSIONE DELLE REGOLE DEL FIGLIO
+    void ontology5Test() throws OWLOntologyCreationException {
+        this.ontology = loadFromFile(this.manager, "ontology5.txt");
+        this.standardReasoner = reasonerFactory.createReasoner(this.ontology);
+        ALCQueryParser alcQueryParser = new ALCQueryParser(this.ontology);
+        OWLClassExpression cl = alcQueryParser.parseClassExpression("A");
+        ALCReasoner alcReasoner = new ALCReasoner(this.ontology);
+        calculateHermitTimeAndAssertEquals(cl, alcReasoner);
+    }
+
     @Test //IMMEDIATAMENTE SODDISFACIBILE DOPO APPLICAZIONE LAZY UNFOLDING
     void pizzaTest() throws OWLOntologyCreationException {
         this.ontology = loadFromFile(this.manager, "pizza.txt");
