@@ -4,6 +4,7 @@ import intelligent.web.individual.TableauxIndividual;
 import intelligent.web.individual.TableauxIndividualFactory;
 import intelligent.web.rdf.RDFBuilder;
 import intelligent.web.visitor.AxiomPrettyPrinter;
+import intelligent.web.visitor.ClassPrettyPrinter;
 import intelligent.web.visitor.NNFMod;
 import org.apache.commons.lang3.tuple.Pair;
 import org.semanticweb.owlapi.model.*;
@@ -44,6 +45,7 @@ public class ALCReasoner {
     }
 
     public boolean isSatisfiable(OWLClassExpression classExpression) {
+        LOGGER.info(classExpression.accept(new ClassPrettyPrinter(false)));
         long startTime = System.nanoTime();
         OWLClassExpression nnfQuery = classExpression.getNNF();
         TableauxIndividual a = tableauxIndividualFactory.getNewIndividual();
