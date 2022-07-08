@@ -45,7 +45,7 @@ public class ALCReasoner {
     }
 
     public boolean isSatisfiable(OWLClassExpression classExpression) {
-        LOGGER.info(classExpression.accept(new ClassPrettyPrinter(false)));
+        LOGGER.info("QUERY: " + classExpression.accept(new ClassPrettyPrinter(false)));
         long startTime = System.nanoTime();
         OWLClassExpression nnfQuery = classExpression.getNNF();
         TableauxIndividual a = tableauxIndividualFactory.getNewIndividual();
