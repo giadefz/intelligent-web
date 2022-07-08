@@ -1,7 +1,7 @@
 package intelligent.web.rdf;
 
 import intelligent.web.alc.NodeInfo;
-import intelligent.web.visitor.PrettyPrinter;
+import intelligent.web.visitor.ClassPrettyPrinter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -18,7 +18,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class RDFBuilder {
     private static final String DEFAULT_URI = "http://locahost/";
@@ -64,9 +63,9 @@ public class RDFBuilder {
         final List<OWLClassExpression> classExpressions = nodeInfo.getClassExpressions().toList();
         nodeInfo.setClassExpressions(classExpressions.stream());
         String classExp;
-        resource.addProperty(NEW_EXPRESSION, "X" + nodeInfo.getIndividual() + ": " + PrettyPrinter.printOwlExpression(nodeInfo.getNewClassExpression()));
+        resource.addProperty(NEW_EXPRESSION, "X" + nodeInfo.getIndividual() + ": " + ClassPrettyPrinter.printOwlExpression(nodeInfo.getNewClassExpression()));
         if(!classExpressions.isEmpty()) {
-            final List<String> collect = classExpressions.stream().map(PrettyPrinter::printOwlExpression).toList();
+            final List<String> collect = classExpressions.stream().map(ClassPrettyPrinter::printOwlExpression).toList();
             classExp = StringUtils.join(collect, ", ");
             resource.addProperty(EXPRESSION, "X" + nodeInfo.getIndividual() + ": " + classExp);
         }
